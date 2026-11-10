@@ -45,9 +45,15 @@ window.fetchGdApi = async function (path, options = {}) {
       const response = await fetch(url, { ...options, signal: controller.signal,
         headers: { 'Content-Type': 'application/x-www-form-urlencoded', ...options.headers } });
       if (response.ok) return response;
+      if (response.headers.get('X-WebDash-Upstream-Error') === 'GDNetworkDenied:1005') {
+        window.GDDownloads?.error('Online levels unavailable', 'The GD server blocks this hosting network. Built-in levels and GMD imports remain available.');
+        const error = new Error('The GD server currently blocks this hosting network.');
+        error.code = 'GD_NETWORK_DENIED';
+        throw error;
+      }
       lastError = new Error(`HTTP ${response.status}`);
     } catch (error) {
-      if (options.signal?.aborted) throw error;
+      if (options.signal?.aborted || error.code === 'GD_NETWORK_DENIED') throw error;
       lastError = error;
     } finally {
       clearTimeout(timeout); options.signal?.removeEventListener('abort', abort);

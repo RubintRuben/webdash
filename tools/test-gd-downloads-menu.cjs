@@ -1,8 +1,10 @@
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),assert=require('node:assert/strict');
 const {chromium}=require(path.join(os.homedir(),'.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright'));
+const base=(process.env.WD_URL||'http://127.0.0.1:8790/').replace(/\/$/,'');
+const out=path.resolve(process.env.WD_ARTIFACT_DIR||'work/browser-downloads-menu');fs.mkdirSync(out,{recursive:true});
 (async()=>{const b=await chromium.launch({headless:true,executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',args:['--use-angle=d3d11']});try{
 const p=await b.newPage({viewport:{width:1792,height:1016}}),errors=[];p.on('pageerror',e=>errors.push(e.stack));
-await p.goto('http://127.0.0.1:8790/?devraf=1');await p.waitForFunction(()=>window.scene?.get('GameScene')?._level,null,{timeout:120000});
+await p.goto(base+'/?devraf=1');await p.waitForFunction(()=>window.scene?.get('GameScene')?._level,null,{timeout:120000});
 await p.evaluate(()=>{window.startPosSwitcher=true;const s=window.scene.get('GameScene');s._openSearchMenu();});
 await p.waitForFunction(()=>window.scene.get('GameScene')._searchHtmlInput);
 await p.evaluate(()=>window.scene.get('GameScene')._searchHtmlInput.focus());
@@ -32,7 +34,7 @@ assert.equal(fire.m[0],2);assert.equal(fire.m[3],2);console.log('PASS native ani
 const cold=await b.newPage();
 await cold.route('**/cold-check',route=>route.fulfill({contentType:'text/html',body:'<html><body><script src="/assets/scripts/utils/download-status.js"></script></body></html>'}));
 await cold.route('**/gd-health',async route=>{await new Promise(r=>setTimeout(r,2000));await route.fulfill({json:{ready:true}});});
-await cold.goto('http://127.0.0.1:8790/cold-check');await cold.evaluate(()=>{window.__waking=ensureGdBackend();});
+await cold.goto(base+'/cold-check');await cold.evaluate(()=>{window.__waking=ensureGdBackend();});
 await cold.locator('#gd-download-status').waitFor({state:'visible'});
 assert.match(await cold.locator('#gd-download-status').textContent(),/waking|wake|Connecting/);
 await cold.evaluate(()=>window.__waking);console.log('PASS cold server shows the top notification until readiness');
@@ -50,5 +52,9 @@ const songs=await p.evaluate(async()=>{
 assert.deepEqual(songs,{ng:64,library:64,canceled:true});assert.equal(requests.filter(x=>x==='metadata').length,1);
 assert.ok(requests.some(x=>x.includes('ngfiles.com')));assert.ok(requests.some(x=>x.endsWith('10009999.ogg')));
 console.log('PASS manual and automatic song downloads share the configured backend, library URLs and cancellation');
-await p.screenshot({path:'work/codex-20261110/browser-qa.png'});assert.deepEqual(errors,[]);
+const deniedRequests=[];p.on('request',r=>{if(r.url().includes('getGJLevels21.php'))deniedRequests.push(r.url());});
+await p.route('**/gd-api/getGJLevels21.php',r=>r.fulfill({status:503,headers:{'Access-Control-Allow-Origin':'*','Access-Control-Expose-Headers':'X-WebDash-Upstream-Error','X-WebDash-Upstream-Error':'GDNetworkDenied:1005'},body:'GD network denied'}));
+const denied=await p.evaluate(async()=>{try{await fetchGdApi('/getGJLevels21.php',{method:'POST',body:'str=fixture'});return{};}catch(e){return{code:e.code,text:document.getElementById('gd-download-status').textContent};}});
+assert.equal(denied.code,'GD_NETWORK_DENIED');assert.match(denied.text,/hosting network/);assert.equal(deniedRequests.length,1);console.log('PASS known GD network denial shows a clear notice and avoids futile fallback requests');
+await p.screenshot({path:path.join(out,'browser-qa.png')});assert.deepEqual(errors,[]);
 }finally{await b.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

@@ -52,21 +52,19 @@ try:
  assert r.status==503 and r.getheader('X-WebDash-Upstream-Error')=='ConnectionRefusedError'
  assert b'private diagnostic path' not in body
  c.close();print('PASS upstream failures expose a safe error class and keep private details in server logs')
- requests=[];native=[]
- class ForbiddenHttps:
+ requests=[]
+ class DeniedOrigin:
   def open(self,req,timeout):
-   requests.append((req.full_url,req.data))
-   raise urllib.error.HTTPError(req.full_url,403,'Forbidden',{},io.BytesIO())
- m.urllib.request.build_opener=lambda *args:ForbiddenHttps()
- def native_download(req,destination):
-  native.append((req.full_url,req.data));destination.write_bytes(b'x'*1048576);return 1048576,'text/plain'
- m.native_gd_download=native_download
- c=http.client.HTTPConnection('127.0.0.1',server.server_port,timeout=30)
- payload=b'levelID=1012345&secret=public-read-test';c.request('POST','/gd-api/downloadGJLevel22.php',payload);r=c.getresponse();r.read()
- assert r.status==200 and requests==native==[('https://www.boomlings.com/database/downloadGJLevel22.php',payload)],(requests,native)
- c.close();requests.clear()
- assert local('/gd-audio?url=https%3A%2F%2Fgeometrydashfiles.b-cdn.net%2Fsfx%2Fs9999998.ogg')[0]==503
- assert len(requests)==1 and requests[0][0].startswith('https:'),requests
- assert len(native)==1
- print('PASS blocked GD reads use the native transport with identical HTTPS URL/body; audio stays on its guarded transport')
+   requests.append(req.full_url)
+   raise urllib.error.HTTPError(req.full_url,403,'Forbidden',{},io.BytesIO(b'error code: 1005'))
+ m.urllib.request.build_opener=lambda *args:DeniedOrigin()
+ def post(endpoint,payload):
+  c=http.client.HTTPConnection('127.0.0.1',server.server_port,timeout=30);c.request('POST','/gd-api/'+endpoint,payload);r=c.getresponse();r.read();result=(r.status,r.getheader('X-WebDash-Upstream-Error'),r.getheader('Retry-After'));c.close();return result
+ assert post('downloadGJLevel22.php',b'levelID=1012345&secret=public-read-test')==(503,'GDNetworkDenied:1005','300')
+ assert post('getGJLevels21.php',b'str=public-fixture&secret=public-read-test')==(503,'GDNetworkDenied:1005','300')
+ assert len(requests)==1,requests
+ m.urllib.request.build_opener=lambda *args:Opener()
+ assert local('/gd-audio?url=https%3A%2F%2Fgeometrydashfiles.b-cdn.net%2Fsfx%2Fs9999998.ogg')[0]==200
+ assert local('/gd-health')[0]==200
+ print('PASS GD network denial opens a five-minute circuit across its read endpoints; audio and health stay available')
 finally:server.shutdown();server.server_close();m.CACHE.close()

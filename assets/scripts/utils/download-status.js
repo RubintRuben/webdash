@@ -23,6 +23,7 @@
     if(!active)hideTimer=setTimeout(()=>{if(banner)banner.hidden=true;},failed?8000:1800);
   }
   window.GDDownloads={
+    error(title,detail){notice(title,detail,0);hideTimer=setTimeout(()=>{if(banner)banner.hidden=true;},12000);},
     plan(keys){assets.clear();for(const key of keys)assets.set(key,{key,loaded:0,total:0});update();},
     begin(key){if(!assets.has(key)&&![...assets.values()].some(x=>!x.done&&!x.failed))assets.clear();assets.set(key,{key,loaded:0,total:0});update();},
     progress(key,loaded,total){const row=assets.get(key);if(row){Object.assign(row,{loaded,total});update();}},
