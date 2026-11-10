@@ -36,7 +36,7 @@ class DownloadCache:
         self.limit, self.lock = limit, Lock()
         self.entries, self.pending = {}, {}
 
-    def fetch(self, key, request, ttl, audio=False):
+    def fetch(self, key, request, ttl, audio=False, fallback=None):
         with self.lock:
             row = self.entries.get(key)
             if row and row['expires'] > time.monotonic() and row['path'].is_file():
@@ -57,7 +57,14 @@ class DownloadCache:
                 raise TimeoutError('Download queue is busy')
             try:
                 opener = urllib.request.build_opener(AudioRedirects()) if audio else urllib.request.build_opener()
-                with opener.open(request, timeout=20) as upstream, temporary.open('wb') as out:
+                try:
+                    upstream = opener.open(request, timeout=20)
+                except urllib.error.HTTPError as error:
+                    if error.code != 403 or fallback is None:
+                        raise
+                    error.close()
+                    upstream = opener.open(fallback, timeout=20)
+                with upstream, temporary.open('wb') as out:
                     size = 0
                     while chunk := upstream.read(64 * 1024):
                         size += len(chunk)
@@ -144,7 +151,7 @@ class NoCacheHandler(SimpleHTTPRequestHandler):
             shutil.copyfileobj(stream, self.wfile, 64 * 1024)
 
     def _unavailable(self, service, error):
-        reason = error.reason if isinstance(error, urllib.error.URLError) else error
+        reason = error.reason if isinstance(error, urllib.error.URLError) and not isinstance(error, urllib.error.HTTPError) else error
         self._upstream_error = type(reason).__name__
         if isinstance(error, urllib.error.HTTPError):
             self._upstream_error += ':' + str(error.code)
@@ -211,8 +218,12 @@ class NoCacheHandler(SimpleHTTPRequestHandler):
                 return
             request = urllib.request.Request('https://www.boomlings.com/database/'+endpoint,
                 data=body, headers={'User-Agent': '', 'Content-Type': 'application/x-www-form-urlencoded'})
+            # GD also serves its public read API over HTTP. Some cloud egress
+            # addresses receive 403 on HTTPS; retain the same host, path and body.
+            fallback = urllib.request.Request('http://www.boomlings.com/database/'+endpoint,
+                data=body, headers={'User-Agent': '', 'Content-Type': 'application/x-www-form-urlencoded'})
             ttl = 30 if endpoint == 'getGJLevels21.php' else 3600
-            row, status = CACHE.fetch(endpoint+':'+hashlib.sha256(body).hexdigest(), request, ttl)
+            row, status = CACHE.fetch(endpoint+':'+hashlib.sha256(body).hexdigest(), request, ttl, fallback=fallback)
             self._reply_cached(row, status)
         except (BrokenPipeError, ConnectionResetError):
             pass
