@@ -1,0 +1,12 @@
+{
+  "source": "Isolated original GD 2.2081, camera state +0x324, same Dash Options route, 240 Hz",
+  "samples": [
+    {"frame":16960,"angle":0.028125004842877388},
+    {"frame":17064,"angle":35.77808380126953},
+    {"frame":17200,"angle":90},
+    {"frame":17568,"angle":89.92890167236328},
+    {"frame":17616,"angle":82.80607604980469},
+    {"frame":17720,"angle":38.476341247558594}
+  ],
+  "turns":[{"frame":17066,"robotNodeRotation":-90},{"frame":17611,"robotNodeRotation":0}]
+}

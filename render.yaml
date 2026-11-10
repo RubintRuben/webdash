@@ -1,0 +1,38 @@
+# The frontend stays on Render's CDN while the free API service is asleep.
+services:
+  - type: web
+    name: webdash-api
+    runtime: python
+    plan: free
+    region: frankfurt
+    buildCommand: python -m py_compile tools/webdash-server.py
+    startCommand: python tools/webdash-server.py --production
+    healthCheckPath: /gd-health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.8
+      - key: WEBDASH_ORIGINS
+        value: '*'
+      - key: PUBLIC_URL
+        fromService:
+          name: webdash-api
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+  - type: web
+    name: webdash-play
+    runtime: static
+    buildCommand: python tools/build-web.py
+    staticPublishPath: dist
+    envVars:
+      - key: WEBDASH_API_BASE
+        fromService:
+          name: webdash-api
+          type: web
+          envVarKey: PUBLIC_URL
+    headers:
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=3600
+      - path: /index.html
+        name: Cache-Control
+        value: no-cache

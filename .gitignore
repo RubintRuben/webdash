@@ -1,0 +1,8 @@
+.DS_Store
+/.claude
+/node_modules
+/dist
+/work
+__pycache__/
+/server.js
+*.env*

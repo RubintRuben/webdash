@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Web Dashers</title>
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="stylesheet" href="assets/download-status.css?v=20261110b">
+    <script src="assets/scripts/utils/hosting-config.js?v=20261110b"></script>
+    <script src="assets/scripts/utils/download-status.js?v=20261110b"></script>
+    <meta name="description" content="Web Dashers is a fan-made browser mod of the Geometry Dash Web Demo. It features the main levels, a built-in level creator, and a level search to play online levels. The project is actively in development, with more features and updates planned.">
+    <meta name="theme-color" content="#C1FB3D">
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <!-- - Embeds - -->
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://web-dashers.github.io/" />
+    <meta property="og:title" content="Web Dashers" />
+    <meta property="og:description" content="Web Dashers is a fan-made browser mod of the Geometry Dash Web Demo. It features the main levels, a built-in level creator, and a level search to play online levels. The project is actively in development, with more features and updates planned." />
+    <meta property="og:image" content="https://web-dashers.github.io/wd_assets/thumbnail_1024.png" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://web-dashers.github.io/" />
+    <meta property="twitter:title" content="Web Dashers" />
+    <meta property="twitter:description" content="Web Dashers is a fan-made browser mod of the Geometry Dash Web Demo. It features the main levels, a built-in level creator, and an evel search to play online levels. The project is actively in development, with more features and updates planned." />
+    <meta property="twitter:image" content="https://web-dashers.github.io/wd_assets/thumbnail_1024.png" />
+
+    <!-- Libraries and stuff -->
+    <script src="assets/scripts/game/allObjects.js?v=20260916-2"></script>
+    <script src="assets/scripts/game/allLevels.js?v=20260916-2"></script>
+    <script src="assets/scripts/libs/phaser.min.js"></script>
+    <script src="assets/scripts/libs/pako.min.js"></script>
+    <script>
+        window.WEBDASH_BUILD = new URLSearchParams(window.location.search).get("build") || "direct-20261110b-wave-slopes";
+        // Development aid: ?devraf=1 keeps the game loop running in a hidden
+        // (non-painted) browser view where requestAnimationFrame is paused.
+        if (new URLSearchParams(window.location.search).get("devraf") === "1") {
+            window.requestAnimationFrame = function (cb) { return setTimeout(function () { cb(performance.now()); }, 16); };
+            window.cancelAnimationFrame = function (id) { clearTimeout(id); };
+        }
+    </script>
+    <script src="assets/scripts/utils/cache-manager.js?v=20261110b"></script>
+    <script src="assets/scripts/api/GDapiWrapper.js"></script>
+    <script src="assets/scripts/utils/api-config.js?v=20261110b"></script>
+    <script src="assets/scripts/utils/created-level-store.js?v=20261110b"></script>
+    <script src="assets/scripts/api/account-api.js?v=20260916-4"></script>
+    <!-- workerssdsss nwo-->
+    <script>
+        (function () {
+            // Every host needs its scheme and no trailing slash: the request
+            // path is swapped between hosts by prefix.
+            var GD_PROXY_HOSTS = [
+                "https://gd-proxy.webdashers.workers.dev",
+                "https://webdashers.webdashersdevelopement.workers.dev",
+                "https://fallbackgdproxy.webdashers.workers.dev",
+                "https://fallback2.webdashers.workers.dev"
+            ];
+            var ATTEMPT_TIMEOUT_MS = 12000;
+            window._gdProxyUrl = GD_PROXY_HOSTS[0];
+            window._gdProxyHosts = GD_PROXY_HOSTS;
+            var activeIndex = 0;
+            var nativeFetch = window.fetch.bind(window);
+            function matchingHost(url) {
+                for (var i = 0; i < GD_PROXY_HOSTS.length; i++) {
+                    var host = GD_PROXY_HOSTS[i];
+                    if (url.indexOf(host) === 0 && (url.length === host.length || url.charAt(host.length) === "/" || url.charAt(host.length) === "?")) return host;
+                }
+                return null;
+            }
+            // A worker over its Cloudflare quota answers 429 ("error code:
+            // 1027"); 5xx, network errors and timeouts also move on.
+            function shouldRetry(res) {
+                return res.status === 429 || res.status === 408 || res.status >= 500;
+            }
+            window.fetch = function (input, init) {
+                var isRequestObj = (typeof Request !== "undefined") && (input instanceof Request);
+                var url = isRequestObj ? input.url : input;
+                if (typeof url !== "string") return nativeFetch(input, init);
+                var oldHost = matchingHost(url);
+                if (!oldHost) return nativeFetch(input, init);
+                var path = url.slice(oldHost.length);
+                var callerSignal = (init && init.signal) || (isRequestObj ? input.signal : null);
+                var tried = 0, lastResponse = null, lastError = null;
+                function attempt(hostIndex) {
+                    var host = GD_PROXY_HOSTS[hostIndex];
+                    var controller = (typeof AbortController !== "undefined") ? new AbortController() : null;
+                    var timer = null, opts = Object.assign({}, init || {});
+                    if (controller) {
+                        if (callerSignal) {
+                            if (callerSignal.aborted) controller.abort();
+                            else callerSignal.addEventListener("abort", function () { controller.abort(); });
+                        }
+                        timer = setTimeout(function () { controller.abort(); }, ATTEMPT_TIMEOUT_MS);
+                        opts.signal = controller.signal;
+                    }
+                    var attemptInput = isRequestObj ? new Request(host + path, input) : host + path;
+                    tried++;
+                    return nativeFetch(attemptInput, opts).then(function (res) {
+                        if (timer) clearTimeout(timer);
+                        if (shouldRetry(res) && tried < GD_PROXY_HOSTS.length) {
+                            lastResponse = res;
+                            return attempt((hostIndex + 1) % GD_PROXY_HOSTS.length);
+                        }
+                        if (!shouldRetry(res)) { activeIndex = hostIndex; window._gdProxyUrl = host; }
+                        return res;
+                    }, function (err) {
+                        if (timer) clearTimeout(timer);
+                        if (callerSignal && callerSignal.aborted) throw err;
+                        lastError = err;
+                        if (tried < GD_PROXY_HOSTS.length) return attempt((hostIndex + 1) % GD_PROXY_HOSTS.length);
+                        if (lastResponse) return lastResponse;
+                        throw lastError;
+                    });
+                }
+                return attempt(activeIndex);
+            };
+        })();
+    </script>
+    <script defer src="assets/scripts/utils/config.js?v=20261110b"></script>
+    <script defer src="assets/scripts/game/gd-objects.js?v=20261027-3"></script>
+    <script defer src="assets/scripts/core/triggers.js?v=20261110b"></script>
+    <script defer src="assets/scripts/game/gd-effect-presets.js?v=20261109-2"></script>
+    <script defer src="assets/scripts/core/gd-particles.js?v=20261110b"></script>
+    <script defer src="assets/scripts/game/gd-native-shader.js?v=20261020-4"></script>
+    <script defer src="assets/scripts/core/gd-shaders.js?v=20261110b"></script>
+    <script defer src="assets/scripts/core/gd-camera.js?v=20261110b"></script>
+    <script defer src="assets/scripts/core/gd-gameplay.js?v=20261110b"></script>
+    <script defer src="assets/scripts/core/gd-logic.js?v=20261110b"></script>
+    <script defer src="assets/scripts/core/gd-keyframes.js?v=20261110b"></script>
+    <script defer src="assets/scripts/core/gd-area.js?v=20261110b"></script>
+    <script defer src="assets/scripts/core/gd-render.js?v=20261110b"></script>
+    <script defer src="assets/scripts/core/gd-gradients.js?v=20261110b"></script>
+    <script defer src="assets/scripts/core/level.js?v=20261110b"></script>
+    <script defer src="assets/scripts/core/player.js?v=20261110b"></script>
+    <script defer src="assets/scripts/core/gd-audio.js?v=20261110b"></script>
+    <script defer src="assets/scripts/core/audio.js?v=20261110b"></script>
+    <script defer src="assets/scripts/core/loading-screen.js?v=20261110b"></script>
+    <script defer src="assets/scripts/core/level-editor.js?v=20261110b"></script>
+    <script defer src="assets/scripts/core/game-scene.js?v=20261110b"></script>
+    <link rel="stylesheet" href="assets/eclipse.css?v=20261109-3">
+    <script defer src="assets/scripts/core/gd-hacks.js?v=20261110b"></script>
+    <script defer src="assets/scripts/core/main.js?v=20261110b"></script>
+    <script>
+        new ResizeObserver(() => {
+            window.dispatchEvent(new Event('resize'));
+        }).observe(document.documentElement);
+
+        document.oncontextmenu = (event) => {
+            event.preventDefault();
+        };
+    </script>
+</head>
+
+<body>
+</body>
+
+</html>

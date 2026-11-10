@@ -1,0 +1,63 @@
+const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),assert=require('node:assert/strict');
+const {chromium}=require(path.join(os.homedir(),'.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright'));
+const out=path.resolve('work/codex-20261109b');
+(async()=>{const browser=await chromium.launch({headless:true,executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',args:['--use-angle=d3d11']});try{
+const p=await browser.newPage({viewport:{width:1792,height:1016}}),errors=[];p.on('pageerror',e=>errors.push(e.stack));
+await p.goto('http://127.0.0.1:8790/?devraf=1',{waitUntil:'networkidle'});await p.waitForFunction(()=>window.scene?.get('GameScene')?._level,null,{timeout:120000});
+await p.keyboard.press('Tab');await p.getByRole('button',{name:'Noclip settings',exact:true}).click();
+const q=p.getByRole('dialog',{name:'Noclip',exact:true});
+for(const name of ['Player 1','Player 2','Noclip Tint'])assert.equal(await q.getByRole('switch',{name,exact:true}).count(),1);
+for(const name of ['Accuracy Limit','Death Limit','Tint Opacity','Tint Time'])assert.equal(await q.getByRole('spinbutton',{name,exact:true}).count(),1);
+const accuracy=q.getByRole('spinbutton',{name:'Accuracy Limit',exact:true});await accuracy.fill('94.25');await accuracy.press('ArrowUp');await accuracy.press('Enter');assert.equal(await p.evaluate(()=>GDHacks.state.noclipAccuracyLimit),94.26);
+await q.getByRole('button',{name:'Noclip keybind',exact:true}).click();await p.keyboard.press('KeyN');await p.keyboard.press('Escape');await p.keyboard.press('Tab');
+await p.keyboard.press('KeyN');assert.equal(await p.evaluate(()=>window.noClip),true);await p.keyboard.press('KeyN');assert.equal(await p.evaluate(()=>window.noClip),false);
+await p.keyboard.press('Tab');await p.evaluate(()=>Promise.all(document.getAnimations().map(a=>a.finished)));
+await p.getByRole('button',{name:'Show Hitboxes settings',exact:true}).click();await p.getByRole('button',{name:'Custom Colors settings',exact:true}).click();assert.equal(await p.getByRole('dialog').count(),2);
+await p.keyboard.press('Escape');assert.equal(await p.getByRole('dialog',{name:'Show Hitboxes',exact:true}).count(),1);await p.keyboard.press('Escape');
+const h=p.locator('.eclipse-header').filter({hasText:/^Global$/}),before=await h.boundingBox();
+await p.mouse.move(before.x+80,before.y+12);await p.mouse.down();await p.mouse.move(before.x+135,before.y+62,{steps:8});const after=await h.boundingBox();await p.mouse.up();await p.evaluate(()=>Promise.all(document.getAnimations().map(a=>a.finished)));const snapped=await h.boundingBox();assert.ok(Math.abs(snapped.x-before.x)<1&&Math.abs(snapped.y-before.y)<1);
+assert.ok(after.x-before.x>40&&after.y-before.y>40);assert.equal(await p.locator('.eclipse-body').first().isVisible(),true);
+const names=await p.locator('.eclipse-columns .eclipse-toggle').allTextContents();assert.equal(new Set(names).size,names.length);assert.ok(names.includes('Show Trajectory'));assert.ok(!names.includes('Orb Click Scale'));
+await p.getByRole('button',{name:'Reset Window Positions',exact:true}).click();await p.screenshot({path:path.join(out,'eclipse-expanded.png')});
+await p.getByRole('button',{name:'Noclip settings',exact:true}).click();await p.evaluate(()=>Promise.all(document.getAnimations().map(a=>a.finished)));await p.screenshot({path:path.join(out,'eclipse-noclip.png')});await p.keyboard.press('Tab');console.log('PASS Eclipse Noclip options, per-hack keybinds, column dragging, no duplicate hacks');
+async function load(data){await p.evaluate(data=>{const s=window.scene.get('GameScene');window.__old=s._level;const update=s.constructor.prototype.update;s.update=function(t,dt){update.call(this,t,dt);if(this._level!==window.__old&&!this._slideIn)this._paused=true;};
+window._onlineLevelId='qa_eclipse';window._onlineLevelString=data;window.currentlevel=['stereo_madness','QA','qa_eclipse',['Local','QA']];s.game.registry.set('autoStartGame',true);s.game.loop.wake();s.scene.restart();},data);
+await p.waitForFunction(()=>{const s=window.scene.get('GameScene');return s._level!==window.__old&&!s._slideIn&&!s._audio.musicLoading;},null,{timeout:120000});await p.evaluate(()=>{const s=window.scene.get('GameScene');s.game.loop.sleep();s._audio.pauseMusic();s._waitingForLevelMusic=false;s._paused=false;});}
+await load('kA4,0;1,4401,2,180,3,30,79,1,80,1,383,1;1,1,2,3000,3,15;');
+const pickup=await p.evaluate(()=>{const s=window.scene.get('GameScene'),l=s._level;let hit;
+for(let i=0;i<200;i++){s.constructor.prototype.update.call(s,i*1000/240,1000/240);l._syncGDRenderer(0);if(l._collectedPickups.size){hit={frame:s._physicsFrame,effects:l.gdRenderer.pickupEffects.length,enabled:Object.values(l.gdObjects).find(o=>o?.id===4401)?.enabled,count:l._itemCounts.get(1)};break;}}
+for(let i=0;i<160;i++){s.constructor.prototype.update.call(s,i*1000/240,1000/240);l._syncGDRenderer(0);}return{hit,left:l.gdRenderer.pickupEffects.length};});
+assert.equal(pickup.hit?.effects,1,JSON.stringify(pickup));assert.equal(pickup.hit.enabled,false);assert.equal(pickup.hit.count,1);assert.equal(pickup.left,0);console.log('PASS actual collision collects a pickup, draws its animation once, then removes it',pickup);
+await load('kA4,0;1,8,2,250,3,15;1,1,2,3000,3,15;');
+const trajectory=await p.evaluate(()=>{const s=window.scene.get('GameScene'),l=s._level,before=JSON.stringify({p:s._state,items:[...l._itemCounts],clock:l._spawnClock,frame:s._physicsFrame});
+const a=s._player.predictTrajectory(true,300),b=s._player.predictTrajectory(false,300);const unchanged=before===JSON.stringify({p:s._state,items:[...l._itemCounts],clock:l._spawnClock,frame:s._physicsFrame});
+window.showTrajectory=true;s._drawHackTrajectory();return{unchanged,up:a.points[20],down:b.points[20],dead:b.dead,count:a.points.length};});
+assert.equal(trajectory.unchanged,true);assert.ok(trajectory.up.y>trajectory.down.y);assert.equal(trajectory.dead,true);console.log('PASS trajectories use real jumping/collision and leave live physics and triggers unchanged',trajectory);
+const modes=await p.evaluate(()=>{const s=window.scene.get('GameScene'),player=s._player,initial=s._state,results=[];let bursts=0;
+const old1=player._landEmitter1.explode,old2=player._landEmitter2.explode;player._landEmitter1.explode=player._landEmitter2.explode=()=>{bursts++;};
+try{for(const mode of ['cube','isFlying','isBall','isUfo','isWave','isRobot','isSpider','isSwing']){
+  player.p=new PlayerState();if(mode!=='cube')player.p[mode]=true;player.p.y=mode==='isWave'?180:30;player.p.lastY=player.p.y;player.p.onGround=player.p.canJump=mode!=='isWave';s._state=player.p;
+  const before=JSON.stringify(player.p);for(const down of [true,false]){const r=player.predictTrajectory(down,100);if(!r.points.every(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)))throw Error(mode+' nonfinite');}
+  results.push({mode,unchanged:before===JSON.stringify(player.p)});
+}}finally{player._landEmitter1.explode=old1;player._landEmitter2.explode=old2;player.p=initial;s._state=initial;}return{results,bursts};});
+assert.ok(modes.results.every(r=>r.unchanged));assert.equal(modes.bursts,0);console.log('PASS press/release trajectories in all eight modes produce no real effects or player mutations');
+await p.evaluate(()=>{window.showTrajectory=false;const s=window.scene.get('GameScene');window.clickBetweenFrames=true;window.__cbf=[];const push=s._pushButton;s._pushButton=function(){window.__cbf.push(this._physicsFrame);return push.call(this);};const now=performance.now();s._queueJumpEvent(true,now-2);s.constructor.prototype.update.call(s,0,1000/60);});
+const cbf=await p.evaluate(()=>({frames:window.__cbf,frame:window.scene.get('GameScene')._physicsFrame}));assert.equal(cbf.frames.length,1);assert.equal(cbf.frames[0],cbf.frame-1);console.log('PASS CBF puts a late input on its timestamped substep, not the first catch-up tick',cbf);
+await p.evaluate(()=>{window.clickBetweenFrames=false;const s=window.scene.get('GameScene');s._paused=true;s._menuActive=true;s.game.loop.wake();s._openPlayMenu();});
+const online=await p.evaluate(async()=>{const res=await fetchGdApi('/getGJLevels21.php',{method:'POST',body:'secret=Wmfd2893gb7&type=0&str=Stereo%20Madness&page=0'});const raw=await res.text();
+const levels=raw.split('#')[0].split('|').map(x=>{const a=x.split(':'),o={};for(let i=0;i<a.length;i+=2)o[a[i]]=a[i+1];return o;});const level=levels.find(x=>!Number(x[35]));if(!level)throw Error('No official-song online fixture');
+const s=window.scene.get('GameScene');window.__oldOnline=s._level;const ok=await s._playSelectedOnlineLevel({id:level[1],name:level[2]});return{ok,id:level[1],name:level[2],data:!!window._onlineLevelString};});
+assert.equal(online.ok,true);assert.equal(online.data,true);await p.waitForFunction(()=>{const s=window.scene.get('GameScene');return s._level!==window.__oldOnline&&window.currentlevel[2].startsWith('online_');},null,{timeout:120000});console.log('PASS live online search → download → scene starts',online);
+const custom=await p.evaluate(async()=>{const s=window.scene.get('GameScene'),t=performance.now();const buffer=await s._audio.triggers.load('song',467339);return{loaded:!!buffer,seconds:buffer?.duration,ms:performance.now()-t};});
+assert.equal(custom.loaded,true,JSON.stringify(custom));console.log('PASS online custom song downloads and decodes through the local audio connection',custom);
+await load('kA4,0;1,2015,2,100,3,100,68,90,10,2,170,3;1,2900,2,200,3,100,166,4,167,1,171,1,173,9;1,31,2,800,3,150,kA2,0,kA26,3,kA20,1;1,1,2,3000,3,15;');
+const start=await p.evaluate(()=>{const s=window.scene.get('GameScene');s._startPosIndex=0;s._restartLevel();s._audio.pauseMusic();s._waitingForLevelMusic=false;return{channel:s._level._gameplayChannel,u:s._level.gameplayState.u,rotation:s._level.cameraState.values.rotation,tweens:s._level.cameraState.tweens.length,reverse:s._state.isGoingLeft};});
+assert.equal(start.channel,3);assert.equal(start.u.x,1);assert.equal(start.reverse,true);assert.equal(start.tweens,0);console.log('PASS Start Pos preserves its saved channel/direction and settles its camera',start);
+await load('kA4,0;1,1,2,3000,3,15;');
+const stepBefore=await p.evaluate(()=>{const s=window.scene.get('GameScene');window.frameStepper=true;const f=s._physicsFrame;s.constructor.prototype.update.call(s,0,100);return{f,after:s._physicsFrame};});assert.equal(stepBefore.f,stepBefore.after);
+await p.keyboard.press('KeyC');const stepped=await p.evaluate(()=>{const s=window.scene.get('GameScene');s.constructor.prototype.update.call(s,0,16.67);const f=s._physicsFrame;s.constructor.prototype.update.call(s,0,16.67);window.frameStepper=false;return{f,after:s._physicsFrame};});
+assert.equal(stepped.f,stepBefore.f+1);assert.equal(stepped.f,stepped.after);console.log('PASS Frame Stepper freezes real physics and C advances exactly one 240 Hz step');
+const jumpHack=await p.evaluate(()=>{const s=window.scene.get('GameScene');window.jumpHack=true;s._state.y=s._state.lastY=200;s._state.onGround=s._state.canJump=false;s._state.yVelocity=0;s._pushButton();const result=s._state.yVelocity;window.jumpHack=false;s._releaseButton();return result;});assert.ok(jumpHack>0);
+const autoKill=await p.evaluate(()=>{const s=window.scene.get('GameScene');window.noClip=true;window.autoKill=true;GDHacks.state.autoKillPercentage=0;GDHacks.state.autoKillPercentageEnabled=true;s.constructor.prototype.update.call(s,0,1000/240);window.autoKill=false;window.noClip=false;GDHacks.state.autoKillPercentage=50;return s._state.isDead;});assert.equal(autoKill,true);console.log('PASS Jump Hack permits an airborne jump; Auto Kill obeys its threshold even with Noclip');
+assert.deepEqual(errors,[]);fs.writeFileSync(path.join(out,'acceptance.json'),JSON.stringify({pickup,trajectory,cbf,online,errors},null,2));
+}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

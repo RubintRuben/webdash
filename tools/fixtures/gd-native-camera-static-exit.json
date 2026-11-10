@@ -1,0 +1,73 @@
+{
+  "source": "Unmodified Dash auto.gmd; isolated original Steam executable, updateCamera fields 0x1f0/0x1f4. 240 Hz; Smooth Velocity exit at X8535, duration 2, EaseIn rate1.8.",
+  "zoom": 0.9090909957885742,
+  "velocityX": 192.65625,
+  "velocityY": -86.19140625,
+  "startX": 8572.882587342265,
+  "startY": 426.57604827881016,
+  "rows": [
+    {
+      "frame": 7020,
+      "age": 0.0,
+      "playerX": 8535.8486328125,
+      "offsetX": -45.4658203125,
+      "offsetY": 0
+    },
+    {
+      "frame": 7080,
+      "age": 0.25,
+      "playerX": 8632.7041015625,
+      "offsetX": -36.6922607421875,
+      "offsetY": -3.891468048095703
+    },
+    {
+      "frame": 7140,
+      "age": 0.5,
+      "playerX": 8729.5595703125,
+      "offsetX": -17.837793350219727,
+      "offsetY": -11.968146324157715
+    },
+    {
+      "frame": 7200,
+      "age": 0.75,
+      "playerX": 8826.4150390625,
+      "offsetX": 3.3689937591552734,
+      "offsetY": -20.26523208618164
+    },
+    {
+      "frame": 7260,
+      "age": 1.0,
+      "playerX": 8923.2705078125,
+      "offsetX": 19.85367774963379,
+      "offsetY": -25.153947830200195
+    },
+    {
+      "frame": 7320,
+      "age": 1.25,
+      "playerX": 9020.1259765625,
+      "offsetX": 26.35226058959961,
+      "offsetY": -24.107877731323242
+    },
+    {
+      "frame": 7380,
+      "age": 1.5,
+      "playerX": 9116.9814453125,
+      "offsetX": 21.226051330566406,
+      "offsetY": -16.77884864807129
+    },
+    {
+      "frame": 7440,
+      "age": 1.75,
+      "playerX": 9213.8369140625,
+      "offsetX": 8.49083137512207,
+      "offsetY": -6.187260627746582
+    },
+    {
+      "frame": 7500,
+      "age": 2.0,
+      "playerX": 9310.6923828125,
+      "offsetX": 0,
+      "offsetY": 0
+    }
+  ]
+}

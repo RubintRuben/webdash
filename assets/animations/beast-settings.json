@@ -1,0 +1,177 @@
+{
+  "GJBeast01": {
+    "defaultAnimation": "bite",
+    "animations": {
+      "bite": {
+        "delay": 0.025,
+        "frames": 16,
+        "looped": true
+      },
+      "attack01": {
+        "delay": 0.025,
+        "frames": 3,
+        "looped": false
+      },
+      "attack01_loop": {
+        "delay": 0.025,
+        "frames": 7,
+        "looped": true
+      },
+      "attack01_end": {
+        "delay": 0.04,
+        "frames": 6,
+        "looped": false
+      },
+      "idle01": {
+        "delay": 0.05,
+        "frames": 8,
+        "looped": true
+      }
+    }
+  },
+  "GJBeast02": {
+    "defaultAnimation": "idle01",
+    "animations": {
+      "idle01": {
+        "delay": 0.06,
+        "frames": 9,
+        "looped": false
+      },
+      "idle02": {
+        "delay": 0.06,
+        "frames": 9,
+        "looped": false
+      }
+    }
+  },
+  "GJBeast03": {
+    "defaultAnimation": "idle01",
+    "animations": {
+      "idle01": {
+        "delay": 0.06,
+        "frames": 9,
+        "looped": false
+      },
+      "idle02": {
+        "delay": 0.06,
+        "frames": 9,
+        "looped": false
+      }
+    }
+  },
+  "GJBeast04": {
+    "defaultAnimation": "idle01",
+    "animations": {
+      "idle01": {
+        "delay": 0.06,
+        "frames": 14,
+        "looped": false
+      },
+      "idle02": {
+        "delay": 0.06,
+        "frames": 14,
+        "looped": false
+      },
+      "idle03": {
+        "delay": 0.06,
+        "frames": 14,
+        "looped": false
+      },
+      "attack01": {
+        "delay": 0.06,
+        "frames": 9,
+        "looped": false
+      },
+      "attack02": {
+        "delay": 0.06,
+        "frames": 3,
+        "looped": false
+      },
+      "attack02_loop": {
+        "delay": 0.05,
+        "frames": 6,
+        "looped": true
+      },
+      "attack02_end": {
+        "delay": 0.06,
+        "frames": 5,
+        "looped": false
+      },
+      "sleep": {
+        "delay": 0.06,
+        "frames": 9,
+        "looped": false
+      },
+      "sleep_loop": {
+        "delay": 0.05,
+        "frames": 13,
+        "looped": true
+      },
+      "sleep_end": {
+        "delay": 0.06,
+        "frames": 9,
+        "looped": false
+      }
+    }
+  },
+  "GJBeast05": {
+    "defaultAnimation": "idle01",
+    "animations": {
+      "idle01": {
+        "delay": 0.06,
+        "frames": 13,
+        "looped": false
+      },
+      "idle02": {
+        "delay": 0.06,
+        "frames": 12,
+        "looped": false
+      },
+      "idle03": {
+        "delay": 0.06,
+        "frames": 9,
+        "looped": false
+      },
+      "toAttack01": {
+        "delay": 0.045,
+        "frames": 8,
+        "looped": false
+      },
+      "attack01": {
+        "delay": 0.06,
+        "frames": 13,
+        "looped": true
+      },
+      "attack02": {
+        "delay": 0.06,
+        "frames": 13,
+        "looped": false
+      },
+      "toAttack03": {
+        "delay": 0.045,
+        "frames": 8,
+        "looped": false
+      },
+      "attack03": {
+        "delay": 0.04,
+        "frames": 4,
+        "looped": true
+      },
+      "fromAttack03": {
+        "delay": 0.05,
+        "frames": 9,
+        "looped": false
+      }
+    }
+  },
+  "BlackSludge": {
+    "defaultAnimation": "loop",
+    "animations": {
+      "loop": {
+        "delay": 0.06,
+        "frames": 11,
+        "looped": true
+      }
+    }
+  }
+}

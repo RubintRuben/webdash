@@ -1,0 +1,4407 @@
+{
+  "frames": {
+    "darkblade_02_glow_001.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 120,
+        "h": 137
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 1,
+        "w": 120,
+        "h": 137
+      },
+      "sourceSize": {
+        "w": 122,
+        "h": 139
+      },
+      "extruded": true
+    },
+    "blade_02_glow_001.png": {
+      "frame": {
+        "x": 126,
+        "y": 2,
+        "w": 132,
+        "h": 133
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 1,
+        "w": 132,
+        "h": 133
+      },
+      "sourceSize": {
+        "w": 134,
+        "h": 135
+      },
+      "extruded": true
+    },
+    "boost_05_glow_001.png": {
+      "frame": {
+        "x": 262,
+        "y": 2,
+        "w": 157,
+        "h": 131
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 157,
+        "h": 131
+      },
+      "sourceSize": {
+        "w": 157,
+        "h": 131
+      },
+      "extruded": true
+    },
+    "boost_04_glow_001.png": {
+      "frame": {
+        "x": 423,
+        "y": 2,
+        "w": 145,
+        "h": 131
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 145,
+        "h": 131
+      },
+      "sourceSize": {
+        "w": 145,
+        "h": 131
+      },
+      "extruded": true
+    },
+    "boost_03_glow_001.png": {
+      "frame": {
+        "x": 572,
+        "y": 2,
+        "w": 116,
+        "h": 131
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 116,
+        "h": 131
+      },
+      "sourceSize": {
+        "w": 116,
+        "h": 131
+      },
+      "extruded": true
+    },
+    "boost_02_glow_001.png": {
+      "frame": {
+        "x": 692,
+        "y": 2,
+        "w": 81,
+        "h": 131
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 81,
+        "h": 131
+      },
+      "sourceSize": {
+        "w": 81,
+        "h": 131
+      },
+      "extruded": true
+    },
+    "blackCogwheel_02_glow_001.png": {
+      "frame": {
+        "x": 777,
+        "y": 2,
+        "w": 119,
+        "h": 122
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 119,
+        "h": 122
+      },
+      "sourceSize": {
+        "w": 119,
+        "h": 124
+      },
+      "extruded": true
+    },
+    "lightBlade_02_glow_001.png": {
+      "frame": {
+        "x": 900,
+        "y": 2,
+        "w": 117,
+        "h": 122
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 117,
+        "h": 122
+      },
+      "sourceSize": {
+        "w": 117,
+        "h": 124
+      },
+      "extruded": true
+    },
+    "blade_b_02_glow_001.png": {
+      "frame": {
+        "x": 2,
+        "y": 143,
+        "w": 128,
+        "h": 115
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 1,
+        "w": 128,
+        "h": 115
+      },
+      "sourceSize": {
+        "w": 130,
+        "h": 149
+      },
+      "extruded": true
+    },
+    "playerDash2_outline_008.png": {
+      "frame": {
+        "x": 134,
+        "y": 143,
+        "w": 186,
+        "h": 107
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 13,
+        "y": 2,
+        "w": 186,
+        "h": 107
+      },
+      "sourceSize": {
+        "w": 296,
+        "h": 109
+      },
+      "extruded": true
+    },
+    "playerDash2_outline_001.png": {
+      "frame": {
+        "x": 324,
+        "y": 143,
+        "w": 182,
+        "h": 107
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 16,
+        "y": 0,
+        "w": 182,
+        "h": 107
+      },
+      "sourceSize": {
+        "w": 296,
+        "h": 109
+      },
+      "extruded": true
+    },
+    "boost_01_glow_001.png": {
+      "frame": {
+        "x": 510,
+        "y": 143,
+        "w": 85,
+        "h": 106
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 85,
+        "h": 106
+      },
+      "sourceSize": {
+        "w": 85,
+        "h": 106
+      },
+      "extruded": true
+    },
+    "playerDash2_outline_004.png": {
+      "frame": {
+        "x": 599,
+        "y": 143,
+        "w": 194,
+        "h": 105
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 1,
+        "w": 194,
+        "h": 105
+      },
+      "sourceSize": {
+        "w": 296,
+        "h": 109
+      },
+      "extruded": true
+    },
+    "playerDash2_outline_009.png": {
+      "frame": {
+        "x": 797,
+        "y": 143,
+        "w": 190,
+        "h": 105
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 9,
+        "y": 3,
+        "w": 190,
+        "h": 105
+      },
+      "sourceSize": {
+        "w": 296,
+        "h": 109
+      },
+      "extruded": true
+    },
+    "playerDash2_outline_010.png": {
+      "frame": {
+        "x": 2,
+        "y": 262,
+        "w": 190,
+        "h": 105
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 9,
+        "y": 3,
+        "w": 190,
+        "h": 105
+      },
+      "sourceSize": {
+        "w": 296,
+        "h": 109
+      },
+      "extruded": true
+    },
+    "playerDash2_outline_003.png": {
+      "frame": {
+        "x": 196,
+        "y": 262,
+        "w": 188,
+        "h": 105
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 10,
+        "y": 0,
+        "w": 188,
+        "h": 105
+      },
+      "sourceSize": {
+        "w": 296,
+        "h": 109
+      },
+      "extruded": true
+    },
+    "playerDash2_outline_007.png": {
+      "frame": {
+        "x": 388,
+        "y": 262,
+        "w": 188,
+        "h": 105
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 10,
+        "y": 2,
+        "w": 188,
+        "h": 105
+      },
+      "sourceSize": {
+        "w": 296,
+        "h": 109
+      },
+      "extruded": true
+    },
+    "playerDash2_outline_002.png": {
+      "frame": {
+        "x": 580,
+        "y": 262,
+        "w": 186,
+        "h": 105
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 12,
+        "y": 1,
+        "w": 186,
+        "h": 105
+      },
+      "sourceSize": {
+        "w": 296,
+        "h": 109
+      },
+      "extruded": true
+    },
+    "playerDash2_outline_012.png": {
+      "frame": {
+        "x": 770,
+        "y": 262,
+        "w": 176,
+        "h": 105
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 23,
+        "y": 2,
+        "w": 176,
+        "h": 105
+      },
+      "sourceSize": {
+        "w": 296,
+        "h": 109
+      },
+      "extruded": true
+    },
+    "playerDash2_outline_005.png": {
+      "frame": {
+        "x": 2,
+        "y": 371,
+        "w": 196,
+        "h": 103
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 3,
+        "w": 196,
+        "h": 103
+      },
+      "sourceSize": {
+        "w": 296,
+        "h": 109
+      },
+      "extruded": true
+    },
+    "playerDash2_outline_011.png": {
+      "frame": {
+        "x": 202,
+        "y": 371,
+        "w": 184,
+        "h": 103
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 15,
+        "y": 3,
+        "w": 184,
+        "h": 103
+      },
+      "sourceSize": {
+        "w": 296,
+        "h": 109
+      },
+      "extruded": true
+    },
+    "playerDash2_outline_006.png": {
+      "frame": {
+        "x": 390,
+        "y": 371,
+        "w": 196,
+        "h": 101
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 5,
+        "w": 196,
+        "h": 101
+      },
+      "sourceSize": {
+        "w": 296,
+        "h": 109
+      },
+      "extruded": true
+    },
+    "darkblade_03_glow_001.png": {
+      "frame": {
+        "x": 590,
+        "y": 371,
+        "w": 96,
+        "h": 98
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 1,
+        "w": 96,
+        "h": 98
+      },
+      "sourceSize": {
+        "w": 98,
+        "h": 100
+      },
+      "extruded": true
+    },
+    "playerDash2_009.png": {
+      "frame": {
+        "x": 690,
+        "y": 371,
+        "w": 181,
+        "h": 96
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 8,
+        "y": 2,
+        "w": 181,
+        "h": 96
+      },
+      "sourceSize": {
+        "w": 287,
+        "h": 100
+      },
+      "extruded": true
+    },
+    "playerDash2_008.png": {
+      "frame": {
+        "x": 2,
+        "y": 478,
+        "w": 177,
+        "h": 96
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 12,
+        "y": 3,
+        "w": 177,
+        "h": 96
+      },
+      "sourceSize": {
+        "w": 287,
+        "h": 100
+      },
+      "extruded": true
+    },
+    "playerDash2_001.png": {
+      "frame": {
+        "x": 183,
+        "y": 478,
+        "w": 173,
+        "h": 96
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 16,
+        "y": 1,
+        "w": 173,
+        "h": 96
+      },
+      "sourceSize": {
+        "w": 287,
+        "h": 100
+      },
+      "extruded": true
+    },
+    "blade_03_glow_001.png": {
+      "frame": {
+        "x": 360,
+        "y": 478,
+        "w": 94,
+        "h": 95
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 1,
+        "w": 94,
+        "h": 95
+      },
+      "sourceSize": {
+        "w": 96,
+        "h": 97
+      },
+      "extruded": true
+    },
+    "spiderRing_glow_001.png": {
+      "frame": {
+        "x": 458,
+        "y": 478,
+        "w": 94,
+        "h": 95
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 94,
+        "h": 95
+      },
+      "sourceSize": {
+        "w": 94,
+        "h": 97
+      },
+      "extruded": true
+    },
+    "playerDash2_004.png": {
+      "frame": {
+        "x": 556,
+        "y": 478,
+        "w": 185,
+        "h": 94
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 2,
+        "w": 185,
+        "h": 94
+      },
+      "sourceSize": {
+        "w": 287,
+        "h": 100
+      },
+      "extruded": true
+    },
+    "playerDash2_010.png": {
+      "frame": {
+        "x": 745,
+        "y": 478,
+        "w": 181,
+        "h": 94
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 8,
+        "y": 4,
+        "w": 181,
+        "h": 94
+      },
+      "sourceSize": {
+        "w": 287,
+        "h": 100
+      },
+      "extruded": true
+    },
+    "playerDash2_003.png": {
+      "frame": {
+        "x": 2,
+        "y": 578,
+        "w": 179,
+        "h": 94
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 9,
+        "y": 1,
+        "w": 179,
+        "h": 94
+      },
+      "sourceSize": {
+        "w": 287,
+        "h": 100
+      },
+      "extruded": true
+    },
+    "playerDash2_007.png": {
+      "frame": {
+        "x": 185,
+        "y": 578,
+        "w": 179,
+        "h": 94
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 9,
+        "y": 3,
+        "w": 179,
+        "h": 94
+      },
+      "sourceSize": {
+        "w": 287,
+        "h": 100
+      },
+      "extruded": true
+    },
+    "playerDash2_002.png": {
+      "frame": {
+        "x": 368,
+        "y": 578,
+        "w": 177,
+        "h": 94
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 12,
+        "y": 2,
+        "w": 177,
+        "h": 94
+      },
+      "sourceSize": {
+        "w": 287,
+        "h": 100
+      },
+      "extruded": true
+    },
+    "playerDash2_012.png": {
+      "frame": {
+        "x": 549,
+        "y": 578,
+        "w": 167,
+        "h": 94
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 22,
+        "y": 3,
+        "w": 167,
+        "h": 94
+      },
+      "sourceSize": {
+        "w": 287,
+        "h": 100
+      },
+      "extruded": true
+    },
+    "blackCogwheel_03_glow_001.png": {
+      "frame": {
+        "x": 720,
+        "y": 578,
+        "w": 93,
+        "h": 94
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 1,
+        "w": 93,
+        "h": 94
+      },
+      "sourceSize": {
+        "w": 95,
+        "h": 96
+      },
+      "extruded": true
+    },
+    "playerDash2_005.png": {
+      "frame": {
+        "x": 817,
+        "y": 578,
+        "w": 187,
+        "h": 92
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 4,
+        "w": 187,
+        "h": 92
+      },
+      "sourceSize": {
+        "w": 287,
+        "h": 100
+      },
+      "extruded": true
+    },
+    "playerDash2_011.png": {
+      "frame": {
+        "x": 2,
+        "y": 676,
+        "w": 175,
+        "h": 92
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 14,
+        "y": 4,
+        "w": 175,
+        "h": 92
+      },
+      "sourceSize": {
+        "w": 287,
+        "h": 100
+      },
+      "extruded": true
+    },
+    "teleportRing_glow_001.png": {
+      "frame": {
+        "x": 181,
+        "y": 676,
+        "w": 92,
+        "h": 92
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 92,
+        "h": 92
+      },
+      "sourceSize": {
+        "w": 92,
+        "h": 94
+      },
+      "extruded": true
+    },
+    "darkblade_01_glow_001.png": {
+      "frame": {
+        "x": 277,
+        "y": 676,
+        "w": 91,
+        "h": 92
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 0,
+        "w": 91,
+        "h": 92
+      },
+      "sourceSize": {
+        "w": 181,
+        "h": 182
+      },
+      "extruded": true
+    },
+    "blade_b_01_glow_001.png": {
+      "frame": {
+        "x": 372,
+        "y": 676,
+        "w": 91,
+        "h": 91
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 91,
+        "h": 91
+      },
+      "sourceSize": {
+        "w": 179,
+        "h": 181
+      },
+      "extruded": true
+    },
+    "blackCogwheel_01_glow_001.png": {
+      "frame": {
+        "x": 467,
+        "y": 676,
+        "w": 90,
+        "h": 91
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 90,
+        "h": 91
+      },
+      "sourceSize": {
+        "w": 178,
+        "h": 179
+      },
+      "extruded": true
+    },
+    "blade_01_glow_001.png": {
+      "frame": {
+        "x": 561,
+        "y": 676,
+        "w": 90,
+        "h": 91
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 90,
+        "h": 91
+      },
+      "sourceSize": {
+        "w": 178,
+        "h": 179
+      },
+      "extruded": true
+    },
+    "playerDash2_006.png": {
+      "frame": {
+        "x": 655,
+        "y": 676,
+        "w": 187,
+        "h": 90
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 6,
+        "w": 187,
+        "h": 90
+      },
+      "sourceSize": {
+        "w": 287,
+        "h": 100
+      },
+      "extruded": true
+    },
+    "lightBlade_01_glow_001.png": {
+      "frame": {
+        "x": 846,
+        "y": 676,
+        "w": 86,
+        "h": 88
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 0,
+        "w": 86,
+        "h": 88
+      },
+      "sourceSize": {
+        "w": 172,
+        "h": 174
+      },
+      "extruded": true
+    },
+    "dashRing_01_glow_001.png": {
+      "frame": {
+        "x": 936,
+        "y": 676,
+        "w": 86,
+        "h": 87
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 9,
+        "y": 2,
+        "w": 86,
+        "h": 87
+      },
+      "sourceSize": {
+        "w": 96,
+        "h": 91
+      },
+      "extruded": true
+    },
+    "dashRing_02_glow_001.png": {
+      "frame": {
+        "x": 930,
+        "y": 478,
+        "w": 86,
+        "h": 87
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 9,
+        "y": 2,
+        "w": 86,
+        "h": 87
+      },
+      "sourceSize": {
+        "w": 96,
+        "h": 91
+      },
+      "extruded": true
+    },
+    "blade_b_03_glow_001.png": {
+      "frame": {
+        "x": 875,
+        "y": 371,
+        "w": 36,
+        "h": 87
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 2,
+        "w": 36,
+        "h": 87
+      },
+      "sourceSize": {
+        "w": 36,
+        "h": 91
+      },
+      "extruded": true
+    },
+    "spinBlade01_glow_001.png": {
+      "frame": {
+        "x": 915,
+        "y": 371,
+        "w": 107,
+        "h": 86
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 107,
+        "h": 86
+      },
+      "sourceSize": {
+        "w": 157,
+        "h": 170
+      },
+      "extruded": true
+    },
+    "lightBlade_03_glow_001.png": {
+      "frame": {
+        "x": 2,
+        "y": 772,
+        "w": 85,
+        "h": 86
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 85,
+        "h": 86
+      },
+      "sourceSize": {
+        "w": 85,
+        "h": 88
+      },
+      "extruded": true
+    },
+    "ring_02_glow_001.png": {
+      "frame": {
+        "x": 91,
+        "y": 772,
+        "w": 84,
+        "h": 84
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 84,
+        "h": 84
+      },
+      "sourceSize": {
+        "w": 84,
+        "h": 86
+      },
+      "extruded": true
+    },
+    "dropRing_01_glow_001.png": {
+      "frame": {
+        "x": 179,
+        "y": 772,
+        "w": 82,
+        "h": 83
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 82,
+        "h": 83
+      },
+      "sourceSize": {
+        "w": 82,
+        "h": 83
+      },
+      "extruded": true
+    },
+    "blockOutline_01_glow_001.png": {
+      "frame": {
+        "x": 265,
+        "y": 772,
+        "w": 79,
+        "h": 79
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 79,
+        "h": 79
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "invis_square_01_glow_001.png": {
+      "frame": {
+        "x": 348,
+        "y": 772,
+        "w": 79,
+        "h": 79
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 79,
+        "h": 79
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "lightsquare_01_01_glow_001.png": {
+      "frame": {
+        "x": 431,
+        "y": 772,
+        "w": 79,
+        "h": 79
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 79,
+        "h": 79
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "lightsquare_02_01_glow_001.png": {
+      "frame": {
+        "x": 514,
+        "y": 772,
+        "w": 79,
+        "h": 79
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 79,
+        "h": 79
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "lightsquare_03_01_glow_001.png": {
+      "frame": {
+        "x": 597,
+        "y": 772,
+        "w": 79,
+        "h": 79
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 79,
+        "h": 79
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "lightsquare_05_01_glow_001.png": {
+      "frame": {
+        "x": 680,
+        "y": 772,
+        "w": 79,
+        "h": 79
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 79,
+        "h": 79
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "square_01_glow_001.png": {
+      "frame": {
+        "x": 763,
+        "y": 772,
+        "w": 79,
+        "h": 79
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 79,
+        "h": 79
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "square_08_glow_001.png": {
+      "frame": {
+        "x": 846,
+        "y": 772,
+        "w": 79,
+        "h": 79
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 79,
+        "h": 79
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "square_f_01_glow_001.png": {
+      "frame": {
+        "x": 929,
+        "y": 772,
+        "w": 79,
+        "h": 79
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 79,
+        "h": 79
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "square_h_04_glow_001.png": {
+      "frame": {
+        "x": 2,
+        "y": 862,
+        "w": 79,
+        "h": 79
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 79,
+        "h": 79
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "square_h_06_glow_001.png": {
+      "frame": {
+        "x": 85,
+        "y": 862,
+        "w": 79,
+        "h": 79
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 79,
+        "h": 79
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "brick_02_glow_001.png": {
+      "frame": {
+        "x": 168,
+        "y": 862,
+        "w": 78,
+        "h": 79
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 78,
+        "h": 79
+      },
+      "sourceSize": {
+        "w": 78,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "ring_custom_01_glow_001.png": {
+      "frame": {
+        "x": 250,
+        "y": 862,
+        "w": 78,
+        "h": 78
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 1,
+        "w": 78,
+        "h": 78
+      },
+      "sourceSize": {
+        "w": 80,
+        "h": 80
+      },
+      "extruded": true
+    },
+    "spinBlade02_glow_001.png": {
+      "frame": {
+        "x": 332,
+        "y": 862,
+        "w": 73,
+        "h": 78
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 1,
+        "w": 73,
+        "h": 78
+      },
+      "sourceSize": {
+        "w": 109,
+        "h": 118
+      },
+      "extruded": true
+    },
+    "triangle_h_02_glow_001.png": {
+      "frame": {
+        "x": 409,
+        "y": 862,
+        "w": 135,
+        "h": 77
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 2,
+        "w": 135,
+        "h": 77
+      },
+      "sourceSize": {
+        "w": 139,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "invis_triangle_04_glow_001.png": {
+      "frame": {
+        "x": 548,
+        "y": 862,
+        "w": 133,
+        "h": 77
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 5,
+        "y": 2,
+        "w": 133,
+        "h": 77
+      },
+      "sourceSize": {
+        "w": 139,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "ring_03_glow_001.png": {
+      "frame": {
+        "x": 685,
+        "y": 862,
+        "w": 78,
+        "h": 77
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 78,
+        "h": 77
+      },
+      "sourceSize": {
+        "w": 78,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "gravring_01_glow_001.png": {
+      "frame": {
+        "x": 767,
+        "y": 862,
+        "w": 77,
+        "h": 77
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 77,
+        "h": 77
+      },
+      "sourceSize": {
+        "w": 77,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "ring_01_glow_001.png": {
+      "frame": {
+        "x": 848,
+        "y": 862,
+        "w": 77,
+        "h": 77
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 77,
+        "h": 77
+      },
+      "sourceSize": {
+        "w": 77,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "blockOutline_15_glow_001.png": {
+      "frame": {
+        "x": 2,
+        "y": 945,
+        "w": 131,
+        "h": 76
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 1,
+        "w": 131,
+        "h": 76
+      },
+      "sourceSize": {
+        "w": 135,
+        "h": 78
+      },
+      "extruded": true
+    },
+    "plank_01_slope_02_glow_001.png": {
+      "frame": {
+        "x": 137,
+        "y": 945,
+        "w": 131,
+        "h": 76
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 1,
+        "w": 131,
+        "h": 76
+      },
+      "sourceSize": {
+        "w": 135,
+        "h": 78
+      },
+      "extruded": true
+    },
+    "triangle_b_02_glow_001.png": {
+      "frame": {
+        "x": 272,
+        "y": 945,
+        "w": 131,
+        "h": 76
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 1,
+        "w": 131,
+        "h": 76
+      },
+      "sourceSize": {
+        "w": 135,
+        "h": 78
+      },
+      "extruded": true
+    },
+    "invis_triangle_02_glow_001.png": {
+      "frame": {
+        "x": 407,
+        "y": 945,
+        "w": 75,
+        "h": 75
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 4,
+        "w": 75,
+        "h": 75
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "triangle_h_01_glow_001.png": {
+      "frame": {
+        "x": 486,
+        "y": 945,
+        "w": 75,
+        "h": 75
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 75,
+        "h": 75
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "iceSpike_01_glow_001.png": {
+      "frame": {
+        "x": 565,
+        "y": 945,
+        "w": 74,
+        "h": 75
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 4,
+        "w": 74,
+        "h": 75
+      },
+      "sourceSize": {
+        "w": 74,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "invis_spike_01_glow_001.png": {
+      "frame": {
+        "x": 643,
+        "y": 945,
+        "w": 74,
+        "h": 75
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 4,
+        "w": 74,
+        "h": 75
+      },
+      "sourceSize": {
+        "w": 74,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "colorSpike_01_glow_001.png": {
+      "frame": {
+        "x": 721,
+        "y": 945,
+        "w": 72,
+        "h": 75
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 4,
+        "w": 72,
+        "h": 75
+      },
+      "sourceSize": {
+        "w": 74,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "spike_01_glow_001.png": {
+      "frame": {
+        "x": 797,
+        "y": 945,
+        "w": 72,
+        "h": 75
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 4,
+        "w": 72,
+        "h": 75
+      },
+      "sourceSize": {
+        "w": 74,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "gravJumpRing_01_glow_001.png": {
+      "frame": {
+        "x": 873,
+        "y": 945,
+        "w": 74,
+        "h": 74
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 74,
+        "h": 74
+      },
+      "sourceSize": {
+        "w": 74,
+        "h": 76
+      },
+      "extruded": true
+    },
+    "blockOutline_14_glow_001.png": {
+      "frame": {
+        "x": 929,
+        "y": 862,
+        "w": 73,
+        "h": 73
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 3,
+        "w": 73,
+        "h": 73
+      },
+      "sourceSize": {
+        "w": 75,
+        "h": 77
+      },
+      "extruded": true
+    },
+    "triangle_b_01_glow_001.png": {
+      "frame": {
+        "x": 2,
+        "y": 1025,
+        "w": 73,
+        "h": 73
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 3,
+        "w": 73,
+        "h": 73
+      },
+      "sourceSize": {
+        "w": 75,
+        "h": 77
+      },
+      "extruded": true
+    },
+    "plank_01_slope_01_glow_001.png": {
+      "frame": {
+        "x": 79,
+        "y": 1025,
+        "w": 71,
+        "h": 73
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 3,
+        "w": 71,
+        "h": 73
+      },
+      "sourceSize": {
+        "w": 75,
+        "h": 77
+      },
+      "extruded": true
+    },
+    "blockOutline_04_glow_001.png": {
+      "frame": {
+        "x": 154,
+        "y": 1025,
+        "w": 79,
+        "h": 71
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 79,
+        "h": 71
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "lightsquare_01_06_glow_001.png": {
+      "frame": {
+        "x": 237,
+        "y": 1025,
+        "w": 79,
+        "h": 71
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 79,
+        "h": 71
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "lightsquare_02_06_glow_001.png": {
+      "frame": {
+        "x": 320,
+        "y": 1025,
+        "w": 79,
+        "h": 71
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 79,
+        "h": 71
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "lightsquare_03_06_glow_001.png": {
+      "frame": {
+        "x": 403,
+        "y": 1025,
+        "w": 79,
+        "h": 71
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 79,
+        "h": 71
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "lightsquare_05_06_glow_001.png": {
+      "frame": {
+        "x": 486,
+        "y": 1025,
+        "w": 79,
+        "h": 71
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 79,
+        "h": 71
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "square_06_glow_001.png": {
+      "frame": {
+        "x": 569,
+        "y": 1025,
+        "w": 79,
+        "h": 71
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 79,
+        "h": 71
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "square_f_06_glow_001.png": {
+      "frame": {
+        "x": 652,
+        "y": 1025,
+        "w": 79,
+        "h": 71
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 79,
+        "h": 71
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "blockOutline_03_glow_001.png": {
+      "frame": {
+        "x": 735,
+        "y": 1025,
+        "w": 71,
+        "h": 71
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 71,
+        "h": 71
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "lightsquare_01_03_glow_001.png": {
+      "frame": {
+        "x": 810,
+        "y": 1025,
+        "w": 71,
+        "h": 71
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 71,
+        "h": 71
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "lightsquare_02_03_glow_001.png": {
+      "frame": {
+        "x": 885,
+        "y": 1025,
+        "w": 71,
+        "h": 71
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 71,
+        "h": 71
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "lightsquare_03_03_glow_001.png": {
+      "frame": {
+        "x": 951,
+        "y": 945,
+        "w": 71,
+        "h": 71
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 71,
+        "h": 71
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "lightsquare_05_03_glow_001.png": {
+      "frame": {
+        "x": 950,
+        "y": 262,
+        "w": 71,
+        "h": 71
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 71,
+        "h": 71
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "square_03_glow_001.png": {
+      "frame": {
+        "x": 2,
+        "y": 1102,
+        "w": 71,
+        "h": 71
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 71,
+        "h": 71
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "square_f_03_glow_001.png": {
+      "frame": {
+        "x": 77,
+        "y": 1102,
+        "w": 71,
+        "h": 71
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 71,
+        "h": 71
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "blockOutline_17_glow_001.png": {
+      "frame": {
+        "x": 152,
+        "y": 1102,
+        "w": 113,
+        "h": 68
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 3,
+        "w": 113,
+        "h": 68
+      },
+      "sourceSize": {
+        "w": 115,
+        "h": 72
+      },
+      "extruded": true
+    },
+    "bladeTrap01_glow_001.png": {
+      "frame": {
+        "x": 269,
+        "y": 1102,
+        "w": 46,
+        "h": 68
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 46,
+        "h": 68
+      },
+      "sourceSize": {
+        "w": 88,
+        "h": 70
+      },
+      "extruded": true
+    },
+    "bladeTrap02_glow_001.png": {
+      "frame": {
+        "x": 319,
+        "y": 1102,
+        "w": 35,
+        "h": 68
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 35,
+        "h": 68
+      },
+      "sourceSize": {
+        "w": 67,
+        "h": 68
+      },
+      "extruded": true
+    },
+    "lightsquare_01_07_glow_001.png": {
+      "frame": {
+        "x": 358,
+        "y": 1102,
+        "w": 79,
+        "h": 60
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 79,
+        "h": 60
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 60
+      },
+      "extruded": true
+    },
+    "lightsquare_02_07_glow_001.png": {
+      "frame": {
+        "x": 441,
+        "y": 1102,
+        "w": 79,
+        "h": 60
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 79,
+        "h": 60
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 60
+      },
+      "extruded": true
+    },
+    "lightsquare_03_07_glow_001.png": {
+      "frame": {
+        "x": 524,
+        "y": 1102,
+        "w": 79,
+        "h": 60
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 79,
+        "h": 60
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 60
+      },
+      "extruded": true
+    },
+    "lightsquare_05_07_glow_001.png": {
+      "frame": {
+        "x": 607,
+        "y": 1102,
+        "w": 79,
+        "h": 60
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 79,
+        "h": 60
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 60
+      },
+      "extruded": true
+    },
+    "square_07_glow_001.png": {
+      "frame": {
+        "x": 690,
+        "y": 1102,
+        "w": 79,
+        "h": 60
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 79,
+        "h": 60
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 60
+      },
+      "extruded": true
+    },
+    "square_f_07_glow_001.png": {
+      "frame": {
+        "x": 773,
+        "y": 1102,
+        "w": 79,
+        "h": 60
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 79,
+        "h": 60
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 60
+      },
+      "extruded": true
+    },
+    "blockOutline_05_glow_001.png": {
+      "frame": {
+        "x": 856,
+        "y": 1102,
+        "w": 21,
+        "h": 60
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 21,
+        "h": 60
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 60
+      },
+      "extruded": true
+    },
+    "bladeTrap03_glow_001.png": {
+      "frame": {
+        "x": 881,
+        "y": 1102,
+        "w": 31,
+        "h": 57
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 0,
+        "w": 31,
+        "h": 57
+      },
+      "sourceSize": {
+        "w": 61,
+        "h": 61
+      },
+      "extruded": true
+    },
+    "iceSpike_03_glow_001.png": {
+      "frame": {
+        "x": 916,
+        "y": 1102,
+        "w": 53,
+        "h": 55
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 3,
+        "w": 53,
+        "h": 55
+      },
+      "sourceSize": {
+        "w": 55,
+        "h": 59
+      },
+      "extruded": true
+    },
+    "invis_spike_03_glow_001.png": {
+      "frame": {
+        "x": 960,
+        "y": 1025,
+        "w": 54,
+        "h": 53
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 3,
+        "w": 54,
+        "h": 53
+      },
+      "sourceSize": {
+        "w": 54,
+        "h": 57
+      },
+      "extruded": true
+    },
+    "blockOutline_16_glow_001.png": {
+      "frame": {
+        "x": 2,
+        "y": 1177,
+        "w": 53,
+        "h": 53
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 3,
+        "w": 53,
+        "h": 53
+      },
+      "sourceSize": {
+        "w": 55,
+        "h": 57
+      },
+      "extruded": true
+    },
+    "colorSpike_03_glow_001.png": {
+      "frame": {
+        "x": 59,
+        "y": 1177,
+        "w": 53,
+        "h": 53
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 3,
+        "w": 53,
+        "h": 53
+      },
+      "sourceSize": {
+        "w": 53,
+        "h": 57
+      },
+      "extruded": true
+    },
+    "spike_03_glow_001.png": {
+      "frame": {
+        "x": 116,
+        "y": 1177,
+        "w": 53,
+        "h": 53
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 3,
+        "w": 53,
+        "h": 53
+      },
+      "sourceSize": {
+        "w": 53,
+        "h": 57
+      },
+      "extruded": true
+    },
+    "blockOutline_11_glow_001.png": {
+      "frame": {
+        "x": 173,
+        "y": 1177,
+        "w": 79,
+        "h": 49
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 79,
+        "h": 49
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 49
+      },
+      "extruded": true
+    },
+    "blockOutline_13_glow_001.png": {
+      "frame": {
+        "x": 256,
+        "y": 1177,
+        "w": 71,
+        "h": 49
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 8,
+        "y": 0,
+        "w": 71,
+        "h": 49
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 49
+      },
+      "extruded": true
+    },
+    "blockOutline_12_glow_001.png": {
+      "frame": {
+        "x": 331,
+        "y": 1177,
+        "w": 60,
+        "h": 49
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 60,
+        "h": 49
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 49
+      },
+      "extruded": true
+    },
+    "blockOutline_10_glow_001.png": {
+      "frame": {
+        "x": 395,
+        "y": 1177,
+        "w": 49,
+        "h": 49
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 49,
+        "h": 49
+      },
+      "sourceSize": {
+        "w": 49,
+        "h": 49
+      },
+      "extruded": true
+    },
+    "colorSquare_01_small_glow_001.png": {
+      "frame": {
+        "x": 448,
+        "y": 1177,
+        "w": 49,
+        "h": 49
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 49,
+        "h": 49
+      },
+      "sourceSize": {
+        "w": 49,
+        "h": 49
+      },
+      "extruded": true
+    },
+    "invis_square_01_small_glow_001.png": {
+      "frame": {
+        "x": 501,
+        "y": 1177,
+        "w": 49,
+        "h": 49
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 49,
+        "h": 49
+      },
+      "sourceSize": {
+        "w": 49,
+        "h": 49
+      },
+      "extruded": true
+    },
+    "square_01_small_glow_001.png": {
+      "frame": {
+        "x": 554,
+        "y": 1177,
+        "w": 49,
+        "h": 49
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 49,
+        "h": 49
+      },
+      "sourceSize": {
+        "w": 49,
+        "h": 49
+      },
+      "extruded": true
+    },
+    "iceSpike_02_glow_001.png": {
+      "frame": {
+        "x": 607,
+        "y": 1177,
+        "w": 73,
+        "h": 48
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 2,
+        "w": 73,
+        "h": 48
+      },
+      "sourceSize": {
+        "w": 73,
+        "h": 50
+      },
+      "extruded": true
+    },
+    "invisibleOutline_b_03_glow_001.png": {
+      "frame": {
+        "x": 684,
+        "y": 1177,
+        "w": 132,
+        "h": 46
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 28,
+        "w": 132,
+        "h": 46
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 74
+      },
+      "extruded": true
+    },
+    "invisibleOutline_b_01_glow_001.png": {
+      "frame": {
+        "x": 820,
+        "y": 1177,
+        "w": 60,
+        "h": 46
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 20,
+        "w": 60,
+        "h": 46
+      },
+      "sourceSize": {
+        "w": 72,
+        "h": 66
+      },
+      "extruded": true
+    },
+    "blockOutlineThickb_03_glow_001.png": {
+      "frame": {
+        "x": 884,
+        "y": 1177,
+        "w": 90,
+        "h": 45
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 1,
+        "w": 90,
+        "h": 45
+      },
+      "sourceSize": {
+        "w": 98,
+        "h": 105
+      },
+      "extruded": true
+    },
+    "square_h_01_glow_001.png": {
+      "frame": {
+        "x": 2,
+        "y": 1234,
+        "w": 79,
+        "h": 45
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 79,
+        "h": 45
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 61
+      },
+      "extruded": true
+    },
+    "square_h_02_glow_001.png": {
+      "frame": {
+        "x": 85,
+        "y": 1234,
+        "w": 79,
+        "h": 45
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 79,
+        "h": 45
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 61
+      },
+      "extruded": true
+    },
+    "square_h_03_glow_001.png": {
+      "frame": {
+        "x": 168,
+        "y": 1234,
+        "w": 79,
+        "h": 45
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 79,
+        "h": 45
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 61
+      },
+      "extruded": true
+    },
+    "square_h_08_glow_001.png": {
+      "frame": {
+        "x": 251,
+        "y": 1234,
+        "w": 79,
+        "h": 45
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 79,
+        "h": 45
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 61
+      },
+      "extruded": true
+    },
+    "blockOutlineThickb_02_glow_001.png": {
+      "frame": {
+        "x": 334,
+        "y": 1234,
+        "w": 77,
+        "h": 45
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 2,
+        "w": 77,
+        "h": 45
+      },
+      "sourceSize": {
+        "w": 97,
+        "h": 107
+      },
+      "extruded": true
+    },
+    "square_h_05_glow_001.png": {
+      "frame": {
+        "x": 415,
+        "y": 1234,
+        "w": 63,
+        "h": 45
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 63,
+        "h": 45
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 61
+      },
+      "extruded": true
+    },
+    "square_h_10_glow_001.png": {
+      "frame": {
+        "x": 482,
+        "y": 1234,
+        "w": 62,
+        "h": 45
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 62,
+        "h": 45
+      },
+      "sourceSize": {
+        "w": 62,
+        "h": 61
+      },
+      "extruded": true
+    },
+    "blockOutlineThickb_01_glow_001.png": {
+      "frame": {
+        "x": 548,
+        "y": 1234,
+        "w": 61,
+        "h": 45
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 2,
+        "w": 61,
+        "h": 45
+      },
+      "sourceSize": {
+        "w": 61,
+        "h": 59
+      },
+      "extruded": true
+    },
+    "blockOutlineThickb_08_glow_001.png": {
+      "frame": {
+        "x": 613,
+        "y": 1234,
+        "w": 60,
+        "h": 45
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 2,
+        "w": 60,
+        "h": 45
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 113
+      },
+      "extruded": true
+    },
+    "square_h_07_glow_001.png": {
+      "frame": {
+        "x": 677,
+        "y": 1234,
+        "w": 46,
+        "h": 45
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 46,
+        "h": 45
+      },
+      "sourceSize": {
+        "w": 46,
+        "h": 61
+      },
+      "extruded": true
+    },
+    "square_h_09_glow_001.png": {
+      "frame": {
+        "x": 727,
+        "y": 1234,
+        "w": 44,
+        "h": 45
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 0,
+        "w": 44,
+        "h": 45
+      },
+      "sourceSize": {
+        "w": 46,
+        "h": 61
+      },
+      "extruded": true
+    },
+    "colorPlank_01_glow_001.png": {
+      "frame": {
+        "x": 775,
+        "y": 1234,
+        "w": 79,
+        "h": 44
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 79,
+        "h": 44
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 46
+      },
+      "extruded": true
+    },
+    "invis_plank_01_glow_001.png": {
+      "frame": {
+        "x": 858,
+        "y": 1234,
+        "w": 79,
+        "h": 44
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 79,
+        "h": 44
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 46
+      },
+      "extruded": true
+    },
+    "plank_01_glow_001.png": {
+      "frame": {
+        "x": 941,
+        "y": 1234,
+        "w": 79,
+        "h": 44
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 79,
+        "h": 44
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 46
+      },
+      "extruded": true
+    },
+    "plank_01_03_glow_001.png": {
+      "frame": {
+        "x": 2,
+        "y": 1283,
+        "w": 70,
+        "h": 44
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 8,
+        "y": 1,
+        "w": 70,
+        "h": 44
+      },
+      "sourceSize": {
+        "w": 78,
+        "h": 46
+      },
+      "extruded": true
+    },
+    "plank_01_02_glow_001.png": {
+      "frame": {
+        "x": 76,
+        "y": 1283,
+        "w": 60,
+        "h": 44
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 60,
+        "h": 44
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 46
+      },
+      "extruded": true
+    },
+    "triangle_h_square_02_glow_001.png": {
+      "frame": {
+        "x": 140,
+        "y": 1283,
+        "w": 67,
+        "h": 43
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 67,
+        "h": 43
+      },
+      "sourceSize": {
+        "w": 139,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "plank_01_square_02_glow_001.png": {
+      "frame": {
+        "x": 211,
+        "y": 1283,
+        "w": 65,
+        "h": 43
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 65,
+        "h": 43
+      },
+      "sourceSize": {
+        "w": 75,
+        "h": 45
+      },
+      "extruded": true
+    },
+    "triangle_h_square_01_glow_001.png": {
+      "frame": {
+        "x": 280,
+        "y": 1283,
+        "w": 43,
+        "h": 43
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 43,
+        "h": 43
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "colorSpike_02_glow_001.png": {
+      "frame": {
+        "x": 327,
+        "y": 1283,
+        "w": 70,
+        "h": 42
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 3,
+        "w": 70,
+        "h": 42
+      },
+      "sourceSize": {
+        "w": 72,
+        "h": 46
+      },
+      "extruded": true
+    },
+    "invis_spike_02_glow_001.png": {
+      "frame": {
+        "x": 401,
+        "y": 1283,
+        "w": 70,
+        "h": 42
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 3,
+        "w": 70,
+        "h": 42
+      },
+      "sourceSize": {
+        "w": 72,
+        "h": 46
+      },
+      "extruded": true
+    },
+    "spike_02_glow_001.png": {
+      "frame": {
+        "x": 475,
+        "y": 1283,
+        "w": 70,
+        "h": 42
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 3,
+        "w": 70,
+        "h": 42
+      },
+      "sourceSize": {
+        "w": 72,
+        "h": 46
+      },
+      "extruded": true
+    },
+    "invisibleOutline_01_glow_001.png": {
+      "frame": {
+        "x": 549,
+        "y": 1283,
+        "w": 63,
+        "h": 42
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 18,
+        "w": 63,
+        "h": 42
+      },
+      "sourceSize": {
+        "w": 71,
+        "h": 60
+      },
+      "extruded": true
+    },
+    "smallOutline_03_glow_001.png": {
+      "frame": {
+        "x": 616,
+        "y": 1283,
+        "w": 49,
+        "h": 41
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 49,
+        "h": 41
+      },
+      "sourceSize": {
+        "w": 49,
+        "h": 49
+      },
+      "extruded": true
+    },
+    "smallOutline_02_glow_001.png": {
+      "frame": {
+        "x": 669,
+        "y": 1283,
+        "w": 41,
+        "h": 41
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 41,
+        "h": 41
+      },
+      "sourceSize": {
+        "w": 49,
+        "h": 49
+      },
+      "extruded": true
+    },
+    "plank_01_square_01_glow_001.png": {
+      "frame": {
+        "x": 714,
+        "y": 1283,
+        "w": 39,
+        "h": 41
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 0,
+        "w": 39,
+        "h": 41
+      },
+      "sourceSize": {
+        "w": 45,
+        "h": 43
+      },
+      "extruded": true
+    },
+    "lightsquare_04_sideLine_glow_001.png": {
+      "frame": {
+        "x": 757,
+        "y": 1283,
+        "w": 21,
+        "h": 40
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 21,
+        "h": 40
+      },
+      "sourceSize": {
+        "w": 79,
+        "h": 40
+      },
+      "extruded": true
+    },
+    "invisibleOutline_b_02_glow_001.png": {
+      "frame": {
+        "x": 782,
+        "y": 1283,
+        "w": 87,
+        "h": 39
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 18,
+        "w": 87,
+        "h": 39
+      },
+      "sourceSize": {
+        "w": 97,
+        "h": 57
+      },
+      "extruded": true
+    },
+    "invis_spike_04_glow_001.png": {
+      "frame": {
+        "x": 873,
+        "y": 1283,
+        "w": 39,
+        "h": 39
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 3,
+        "w": 39,
+        "h": 39
+      },
+      "sourceSize": {
+        "w": 39,
+        "h": 43
+      },
+      "extruded": true
+    },
+    "colorSpike_04_glow_001.png": {
+      "frame": {
+        "x": 916,
+        "y": 1283,
+        "w": 38,
+        "h": 39
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 3,
+        "w": 38,
+        "h": 39
+      },
+      "sourceSize": {
+        "w": 38,
+        "h": 43
+      },
+      "extruded": true
+    },
+    "spike_04_glow_001.png": {
+      "frame": {
+        "x": 958,
+        "y": 1283,
+        "w": 38,
+        "h": 39
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 3,
+        "w": 38,
+        "h": 39
+      },
+      "sourceSize": {
+        "w": 38,
+        "h": 43
+      },
+      "extruded": true
+    },
+    "invisibleOutline_03_glow_001.png": {
+      "frame": {
+        "x": 2,
+        "y": 1331,
+        "w": 137,
+        "h": 38
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 20,
+        "w": 137,
+        "h": 38
+      },
+      "sourceSize": {
+        "w": 139,
+        "h": 58
+      },
+      "extruded": true
+    },
+    "invisibleOutline_02_glow_001.png": {
+      "frame": {
+        "x": 143,
+        "y": 1331,
+        "w": 87,
+        "h": 38
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 18,
+        "w": 87,
+        "h": 38
+      },
+      "sourceSize": {
+        "w": 87,
+        "h": 56
+      },
+      "extruded": true
+    },
+    "blockOutlineOuter3_01_glow_001.png": {
+      "frame": {
+        "x": 234,
+        "y": 1331,
+        "w": 33,
+        "h": 35
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 2,
+        "w": 33,
+        "h": 35
+      },
+      "sourceSize": {
+        "w": 127,
+        "h": 131
+      },
+      "extruded": true
+    },
+    "invis_plank_01_small_glow_001.png": {
+      "frame": {
+        "x": 271,
+        "y": 1331,
+        "w": 48,
+        "h": 34
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 48,
+        "h": 34
+      },
+      "sourceSize": {
+        "w": 48,
+        "h": 34
+      },
+      "extruded": true
+    },
+    "plank_01_small_glow_001.png": {
+      "frame": {
+        "x": 323,
+        "y": 1331,
+        "w": 48,
+        "h": 34
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 48,
+        "h": 34
+      },
+      "sourceSize": {
+        "w": 48,
+        "h": 34
+      },
+      "extruded": true
+    },
+    "colorPlank_01_small_glow_001.png": {
+      "frame": {
+        "x": 375,
+        "y": 1331,
+        "w": 46,
+        "h": 34
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 0,
+        "w": 46,
+        "h": 34
+      },
+      "sourceSize": {
+        "w": 48,
+        "h": 34
+      },
+      "extruded": true
+    },
+    "spiderBump_glow_001.png": {
+      "frame": {
+        "x": 425,
+        "y": 1331,
+        "w": 69,
+        "h": 30
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 0,
+        "w": 69,
+        "h": 30
+      },
+      "sourceSize": {
+        "w": 71,
+        "h": 46
+      },
+      "extruded": true
+    },
+    "smallOutline_04_glow_001.png": {
+      "frame": {
+        "x": 498,
+        "y": 1331,
+        "w": 21,
+        "h": 30
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 21,
+        "h": 30
+      },
+      "sourceSize": {
+        "w": 49,
+        "h": 30
+      },
+      "extruded": true
+    },
+    "blockOutlineThick_03_glow_001.png": {
+      "frame": {
+        "x": 523,
+        "y": 1331,
+        "w": 76,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 1,
+        "w": 76,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 80,
+        "h": 88
+      },
+      "extruded": true
+    },
+    "blockOutlineThick_02_glow_001.png": {
+      "frame": {
+        "x": 603,
+        "y": 1331,
+        "w": 71,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 1,
+        "w": 71,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 81,
+        "h": 88
+      },
+      "extruded": true
+    },
+    "blockOutlineThick_08_glow_001.png": {
+      "frame": {
+        "x": 678,
+        "y": 1331,
+        "w": 61,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 61,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 61,
+        "h": 88
+      },
+      "extruded": true
+    },
+    "blockOutlineThick_01_glow_001.png": {
+      "frame": {
+        "x": 743,
+        "y": 1331,
+        "w": 60,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 60,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 34
+      },
+      "extruded": true
+    },
+    "blockOutlineThick_07_glow_001.png": {
+      "frame": {
+        "x": 807,
+        "y": 1331,
+        "w": 45,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 1,
+        "w": 45,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 49,
+        "h": 58
+      },
+      "extruded": true
+    },
+    "blockOutlineThickb_04_glow_001.png": {
+      "frame": {
+        "x": 856,
+        "y": 1331,
+        "w": 24,
+        "h": 24
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 24
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 60
+      },
+      "extruded": true
+    },
+    "blockOutline_15new_glow_001.png": {
+      "frame": {
+        "x": 2,
+        "y": 1373,
+        "w": 147,
+        "h": 23
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 2,
+        "w": 147,
+        "h": 23
+      },
+      "sourceSize": {
+        "w": 151,
+        "h": 25
+      },
+      "extruded": true
+    },
+    "bump_02_glow_001.png": {
+      "frame": {
+        "x": 153,
+        "y": 1373,
+        "w": 71,
+        "h": 22
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 71,
+        "h": 22
+      },
+      "sourceSize": {
+        "w": 71,
+        "h": 32
+      },
+      "extruded": true
+    },
+    "gravbump_01_glow_001.png": {
+      "frame": {
+        "x": 228,
+        "y": 1373,
+        "w": 61,
+        "h": 22
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 0,
+        "w": 61,
+        "h": 22
+      },
+      "sourceSize": {
+        "w": 63,
+        "h": 30
+      },
+      "extruded": true
+    },
+    "blockOutline_02_glow_001.png": {
+      "frame": {
+        "x": 293,
+        "y": 1373,
+        "w": 60,
+        "h": 22
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 60,
+        "h": 22
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 22
+      },
+      "extruded": true
+    },
+    "blockOutline_09_glow_001.png": {
+      "frame": {
+        "x": 357,
+        "y": 1373,
+        "w": 60,
+        "h": 22
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 60,
+        "h": 22
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 22
+      },
+      "extruded": true
+    },
+    "blockOutlineThickb_06_glow_001.png": {
+      "frame": {
+        "x": 421,
+        "y": 1373,
+        "w": 35,
+        "h": 22
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 35,
+        "h": 22
+      },
+      "sourceSize": {
+        "w": 61,
+        "h": 60
+      },
+      "extruded": true
+    },
+    "blockOutlineThickb_05_glow_001.png": {
+      "frame": {
+        "x": 460,
+        "y": 1373,
+        "w": 23,
+        "h": 22
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 23,
+        "h": 22
+      },
+      "sourceSize": {
+        "w": 61,
+        "h": 60
+      },
+      "extruded": true
+    },
+    "blockOutline_08_glow_001.png": {
+      "frame": {
+        "x": 487,
+        "y": 1373,
+        "w": 20,
+        "h": 22
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 20,
+        "h": 22
+      },
+      "sourceSize": {
+        "w": 74,
+        "h": 78
+      },
+      "extruded": true
+    },
+    "blockOutline_14new_glow_001.png": {
+      "frame": {
+        "x": 511,
+        "y": 1373,
+        "w": 98,
+        "h": 21
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 3,
+        "w": 98,
+        "h": 21
+      },
+      "sourceSize": {
+        "w": 100,
+        "h": 25
+      },
+      "extruded": true
+    },
+    "square_b_06_glow_001.png": {
+      "frame": {
+        "x": 613,
+        "y": 1373,
+        "w": 72,
+        "h": 21
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 1,
+        "w": 72,
+        "h": 21
+      },
+      "sourceSize": {
+        "w": 74,
+        "h": 51
+      },
+      "extruded": true
+    },
+    "lightsquare_01_02_glow_001.png": {
+      "frame": {
+        "x": 689,
+        "y": 1373,
+        "w": 60,
+        "h": 21
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 60,
+        "h": 21
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "lightsquare_02_02_glow_001.png": {
+      "frame": {
+        "x": 753,
+        "y": 1373,
+        "w": 60,
+        "h": 21
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 60,
+        "h": 21
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "lightsquare_03_02_glow_001.png": {
+      "frame": {
+        "x": 817,
+        "y": 1373,
+        "w": 60,
+        "h": 21
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 60,
+        "h": 21
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "lightsquare_05_02_glow_001.png": {
+      "frame": {
+        "x": 881,
+        "y": 1373,
+        "w": 60,
+        "h": 21
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 60,
+        "h": 21
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "square_02_glow_001.png": {
+      "frame": {
+        "x": 945,
+        "y": 1373,
+        "w": 60,
+        "h": 21
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 60,
+        "h": 21
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "square_b_01_glow_001.png": {
+      "frame": {
+        "x": 884,
+        "y": 1331,
+        "w": 60,
+        "h": 21
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 60,
+        "h": 21
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 51
+      },
+      "extruded": true
+    },
+    "square_b_04_glow_001.png": {
+      "frame": {
+        "x": 948,
+        "y": 1331,
+        "w": 60,
+        "h": 21
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 60,
+        "h": 21
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 51
+      },
+      "extruded": true
+    },
+    "square_b_05_glow_001.png": {
+      "frame": {
+        "x": 2,
+        "y": 1400,
+        "w": 60,
+        "h": 21
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 60,
+        "h": 21
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 51
+      },
+      "extruded": true
+    },
+    "square_f_02_glow_001.png": {
+      "frame": {
+        "x": 66,
+        "y": 1400,
+        "w": 60,
+        "h": 21
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 60,
+        "h": 21
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "lightsquare_04_02_glow_001.png": {
+      "frame": {
+        "x": 130,
+        "y": 1400,
+        "w": 40,
+        "h": 21
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 40,
+        "h": 21
+      },
+      "sourceSize": {
+        "w": 40,
+        "h": 79
+      },
+      "extruded": true
+    },
+    "bump_03_glow_001.png": {
+      "frame": {
+        "x": 174,
+        "y": 1400,
+        "w": 62,
+        "h": 20
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 62,
+        "h": 20
+      },
+      "sourceSize": {
+        "w": 62,
+        "h": 28
+      },
+      "extruded": true
+    },
+    "smallOutline_01_glow_001.png": {
+      "frame": {
+        "x": 240,
+        "y": 1400,
+        "w": 30,
+        "h": 20
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 30,
+        "h": 20
+      },
+      "sourceSize": {
+        "w": 30,
+        "h": 22
+      },
+      "extruded": true
+    },
+    "blockOutlineOuter2_01_glow_001.png": {
+      "frame": {
+        "x": 274,
+        "y": 1400,
+        "w": 20,
+        "h": 20
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 20,
+        "h": 20
+      },
+      "sourceSize": {
+        "w": 98,
+        "h": 100
+      },
+      "extruded": true
+    },
+    "bump_01_glow_001.png": {
+      "frame": {
+        "x": 298,
+        "y": 1400,
+        "w": 64,
+        "h": 19
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 0,
+        "w": 64,
+        "h": 19
+      },
+      "sourceSize": {
+        "w": 66,
+        "h": 27
+      },
+      "extruded": true
+    },
+    "blockOutline_07_glow_001.png": {
+      "frame": {
+        "x": 366,
+        "y": 1400,
+        "w": 17,
+        "h": 19
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 17,
+        "h": 19
+      },
+      "sourceSize": {
+        "w": 73,
+        "h": 75
+      },
+      "extruded": true
+    },
+    "triangle_b_square_01_glow_001.png": {
+      "frame": {
+        "x": 387,
+        "y": 1400,
+        "w": 16,
+        "h": 16
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 16
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 60
+      },
+      "extruded": true
+    },
+    "triangle_b_square_02_glow_001.png": {
+      "frame": {
+        "x": 407,
+        "y": 1400,
+        "w": 24,
+        "h": 14
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 14
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 60
+      },
+      "extruded": true
+    },
+    "blockOutlineThick_06_glow_001.png": {
+      "frame": {
+        "x": 435,
+        "y": 1400,
+        "w": 19,
+        "h": 14
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 19,
+        "h": 14
+      },
+      "sourceSize": {
+        "w": 61,
+        "h": 60
+      },
+      "extruded": true
+    },
+    "blockOutlineThick_05_glow_001.png": {
+      "frame": {
+        "x": 458,
+        "y": 1400,
+        "w": 14,
+        "h": 14
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 14,
+        "h": 14
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 60
+      },
+      "extruded": true
+    },
+    "blockOutlineOuter1_01_glow_001.png": {
+      "frame": {
+        "x": 476,
+        "y": 1400,
+        "w": 13,
+        "h": 13
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 13,
+        "h": 13
+      },
+      "sourceSize": {
+        "w": 83,
+        "h": 85
+      },
+      "extruded": true
+    },
+    "blockOutlineThick_04_glow_001.png": {
+      "frame": {
+        "x": 493,
+        "y": 1400,
+        "w": 13,
+        "h": 12
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 13,
+        "h": 12
+      },
+      "sourceSize": {
+        "w": 61,
+        "h": 60
+      },
+      "extruded": true
+    },
+    "smallOutline_05_glow_001.png": {
+      "frame": {
+        "x": 510,
+        "y": 1400,
+        "w": 12,
+        "h": 12
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 12
+      },
+      "sourceSize": {
+        "w": 30,
+        "h": 30
+      },
+      "extruded": true
+    },
+    "lightsquare_02_08_glow_001.png": {
+      "frame": {
+        "x": 526,
+        "y": 1400,
+        "w": 60,
+        "h": 10
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 60,
+        "h": 10
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 60
+      },
+      "extruded": true
+    },
+    "blockOutline_06_glow_001.png": {
+      "frame": {
+        "x": 590,
+        "y": 1400,
+        "w": 10,
+        "h": 10
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 10,
+        "h": 10
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 60
+      },
+      "extruded": true
+    },
+    "lightsquare_01_04_glow_001.png": {
+      "frame": {
+        "x": 604,
+        "y": 1400,
+        "w": 10,
+        "h": 10
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 10,
+        "h": 10
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 60
+      },
+      "extruded": true
+    },
+    "lightsquare_02_04_glow_001.png": {
+      "frame": {
+        "x": 618,
+        "y": 1400,
+        "w": 10,
+        "h": 10
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 10,
+        "h": 10
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 60
+      },
+      "extruded": true
+    },
+    "lightsquare_03_04_glow_001.png": {
+      "frame": {
+        "x": 632,
+        "y": 1400,
+        "w": 10,
+        "h": 10
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 10,
+        "h": 10
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 60
+      },
+      "extruded": true
+    },
+    "lightsquare_05_04_glow_001.png": {
+      "frame": {
+        "x": 646,
+        "y": 1400,
+        "w": 10,
+        "h": 10
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 10,
+        "h": 10
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 60
+      },
+      "extruded": true
+    },
+    "square_04_glow_001.png": {
+      "frame": {
+        "x": 660,
+        "y": 1400,
+        "w": 10,
+        "h": 10
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 10,
+        "h": 10
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 60
+      },
+      "extruded": true
+    },
+    "emptyGlow.png": {
+      "frame": {
+        "x": 674,
+        "y": 1400,
+        "w": 3,
+        "h": 3
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 3,
+        "h": 3
+      },
+      "sourceSize": {
+        "w": 1,
+        "h": 1
+      },
+      "extruded": true
+    }
+  },
+  "meta": {
+    "app": "Web Dashers exact GD atlas normalizer",
+    "version": "2.0",
+    "image": "GJ_GameSheetGlow.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 1024,
+      "h": 1424
+    },
+    "scale": "1",
+    "source": "GJ_GameSheetGlow-hd.png",
+    "padding": 2,
+    "rotationNormalized": true
+  }
+}
