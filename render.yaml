@@ -13,11 +13,6 @@ services:
         value: 3.13.8
       - key: WEBDASH_ORIGINS
         value: '*'
-      - key: PUBLIC_URL
-        fromService:
-          name: webdash-api
-          type: web
-          envVarKey: RENDER_EXTERNAL_URL
   - type: web
     name: webdash-play
     runtime: static
@@ -28,7 +23,7 @@ services:
         fromService:
           name: webdash-api
           type: web
-          envVarKey: PUBLIC_URL
+          envVarKey: RENDER_EXTERNAL_URL
     headers:
       - path: /assets/*
         name: Cache-Control
