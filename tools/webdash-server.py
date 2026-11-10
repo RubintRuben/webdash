@@ -5,7 +5,7 @@ from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from threading import BoundedSemaphore, Lock
-import hashlib, os, shutil, sys, tempfile, time
+import hashlib, os, re, shutil, subprocess, sys, tempfile, time
 import urllib.error, urllib.parse, urllib.request
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -13,6 +13,32 @@ PRODUCTION = os.environ.get('RENDER') == 'true' or '--production' in sys.argv
 ORIGINS = set(os.environ.get('WEBDASH_ORIGINS', 'https://web-dashers.github.io').split(','))
 SLOTS = BoundedSemaphore(6)
 MAX_FILE = 48 * 1024 * 1024
+
+def native_gd_download(request, destination):
+    """Use GD's normal libcurl transport when urllib is rejected by the origin."""
+    executable = shutil.which('curl')
+    if not executable:
+        raise OSError('Native GD HTTP transport requires curl')
+    headers = destination.with_suffix('.headers')
+    try:
+        result = subprocess.run([executable, '--silent', '--show-error', '--fail-with-body',
+            '--max-time', '20', '--connect-timeout', '8', '--max-filesize', str(MAX_FILE),
+            '--user-agent', '', '--header', 'Content-Type: application/x-www-form-urlencoded',
+            '--data-binary', '@-', '--dump-header', str(headers), '--output', str(destination),
+            request.full_url], input=request.data, stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE, timeout=25)
+        if result.returncode:
+            text = destination.read_bytes()[:4096].decode('utf-8', errors='replace') if destination.is_file() else ''
+            title = re.search(r'<title>(.*?)</title>', text, re.I | re.S)
+            detail = re.sub(r'\s+', ' ', title.group(1) if title else text[:120])
+            raise OSError('GD curl failed: ' + result.stderr.decode(errors='replace')[:200] + ' ' + detail)
+        size = destination.stat().st_size
+        if size > MAX_FILE:
+            raise ValueError('Download exceeds 48 MiB')
+        types = re.findall(r'^content-type:\s*([^\r\n]+)', headers.read_text(encoding='latin1'), re.I | re.M)
+        return size, types[-1] if types else 'text/plain; charset=utf-8'
+    finally:
+        headers.unlink(missing_ok=True)
 
 def audio_url_allowed(url):
     try:
@@ -36,7 +62,7 @@ class DownloadCache:
         self.limit, self.lock = limit, Lock()
         self.entries, self.pending = {}, {}
 
-    def fetch(self, key, request, ttl, audio=False, fallback=None):
+    def fetch(self, key, request, ttl, audio=False, native_gd=False):
         with self.lock:
             row = self.entries.get(key)
             if row and row['expires'] > time.monotonic() and row['path'].is_file():
@@ -60,20 +86,21 @@ class DownloadCache:
                 try:
                     upstream = opener.open(request, timeout=20)
                 except urllib.error.HTTPError as error:
-                    if error.code != 403 or fallback is None:
+                    if error.code != 403 or not native_gd:
                         raise
                     error.close()
-                    upstream = opener.open(fallback, timeout=20)
-                with upstream, temporary.open('wb') as out:
-                    size = 0
-                    while chunk := upstream.read(64 * 1024):
-                        size += len(chunk)
-                        if size > MAX_FILE:
-                            raise ValueError('Download exceeds 48 MiB')
-                        out.write(chunk)
-                    kind = upstream.headers.get('Content-Type', 'audio/mpeg' if audio else 'text/plain; charset=utf-8')
-                    if audio and any(t in kind.lower() for t in ('text/html', 'application/json')):
-                        raise ValueError('Audio upstream returned an error document')
+                    size, kind = native_gd_download(request, temporary)
+                else:
+                    with upstream, temporary.open('wb') as out:
+                        size = 0
+                        while chunk := upstream.read(64 * 1024):
+                            size += len(chunk)
+                            if size > MAX_FILE:
+                                raise ValueError('Download exceeds 48 MiB')
+                            out.write(chunk)
+                        kind = upstream.headers.get('Content-Type', 'audio/mpeg' if audio else 'text/plain; charset=utf-8')
+                        if audio and any(t in kind.lower() for t in ('text/html', 'application/json')):
+                            raise ValueError('Audio upstream returned an error document')
             finally:
                 SLOTS.release()
             if size == 0 or (not audio and size <= 3 and temporary.read_bytes().strip() in (b'-1', b'-2')):
@@ -218,12 +245,8 @@ class NoCacheHandler(SimpleHTTPRequestHandler):
                 return
             request = urllib.request.Request('https://www.boomlings.com/database/'+endpoint,
                 data=body, headers={'User-Agent': '', 'Content-Type': 'application/x-www-form-urlencoded'})
-            # GD also serves its public read API over HTTP. Some cloud egress
-            # addresses receive 403 on HTTPS; retain the same host, path and body.
-            fallback = urllib.request.Request('http://www.boomlings.com/database/'+endpoint,
-                data=body, headers={'User-Agent': '', 'Content-Type': 'application/x-www-form-urlencoded'})
             ttl = 30 if endpoint == 'getGJLevels21.php' else 3600
-            row, status = CACHE.fetch(endpoint+':'+hashlib.sha256(body).hexdigest(), request, ttl, fallback=fallback)
+            row, status = CACHE.fetch(endpoint+':'+hashlib.sha256(body).hexdigest(), request, ttl, native_gd=True)
             self._reply_cached(row, status)
         except (BrokenPipeError, ConnectionResetError):
             pass
