@@ -109,6 +109,8 @@ class NoCacheHandler(SimpleHTTPRequestHandler):
             super().log_request(code, size)
 
     def end_headers(self):
+        if getattr(self, '_upstream_error', None):
+            self.send_header('X-WebDash-Upstream-Error', self._upstream_error)
         origin = self.headers.get('Origin', '')
         if '*' in ORIGINS or origin in ORIGINS or (not PRODUCTION and origin.startswith(('http://localhost:', 'http://127.0.0.1:'))):
             self.send_header('Access-Control-Allow-Origin', '*' if '*' in ORIGINS else origin)
@@ -140,6 +142,14 @@ class NoCacheHandler(SimpleHTTPRequestHandler):
             self.send_header('Cache-Control', 'public, max-age=86400' if self.path.startswith('/gd-audio') else 'no-cache')
             self.end_headers()
             shutil.copyfileobj(stream, self.wfile, 64 * 1024)
+
+    def _unavailable(self, service, error):
+        reason = error.reason if isinstance(error, urllib.error.URLError) else error
+        self._upstream_error = type(reason).__name__
+        if isinstance(error, urllib.error.HTTPError):
+            self._upstream_error += ':' + str(error.code)
+        self.log_error('%s upstream failed: %s: %s', service, type(reason).__name__, error)
+        self.send_error(503, service + ' temporarily unavailable; retry shortly')
 
     def _public(self):
         parsed = urllib.parse.urlsplit(self.path)
@@ -175,8 +185,8 @@ class NoCacheHandler(SimpleHTTPRequestHandler):
                 self._reply_cached(row, status)
             except (BrokenPipeError, ConnectionResetError):
                 pass
-            except (OSError, ValueError, TimeoutError, urllib.error.URLError):
-                self.send_error(503, 'Audio temporarily unavailable; retry shortly')
+            except (OSError, ValueError, TimeoutError, urllib.error.URLError) as error:
+                self._unavailable('Audio', error)
             return
         if PRODUCTION and not self._public():
             self.send_error(404)
@@ -206,8 +216,8 @@ class NoCacheHandler(SimpleHTTPRequestHandler):
             self._reply_cached(row, status)
         except (BrokenPipeError, ConnectionResetError):
             pass
-        except (OSError, ValueError, TimeoutError, urllib.error.URLError):
-            self.send_error(503, 'GD server temporarily unavailable; retry shortly')
+        except (OSError, ValueError, TimeoutError, urllib.error.URLError) as error:
+            self._unavailable('GD server', error)
 
 class WebDashServer(ThreadingHTTPServer):
     request_queue_size = 128

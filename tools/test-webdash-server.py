@@ -44,4 +44,12 @@ try:
  assert local('/gd-audio?url=http://127.0.0.1/')[0]==400
  assert local('/gd-health')[0]==200
  print('PASS production health, private-path isolation and audio URL allowlist')
+ class FailedOpener:
+  def open(self,*args,**kwargs):raise urllib.error.URLError(ConnectionRefusedError('private diagnostic path'))
+ m.urllib.request.build_opener=lambda *args:FailedOpener()
+ c=http.client.HTTPConnection('127.0.0.1',server.server_port,timeout=30)
+ c.request('GET','/gd-audio?url=https%3A%2F%2Fgeometrydashfiles.b-cdn.net%2Fsfx%2Fs9999999.ogg');r=c.getresponse();body=r.read()
+ assert r.status==503 and r.getheader('X-WebDash-Upstream-Error')=='ConnectionRefusedError'
+ assert b'private diagnostic path' not in body
+ c.close();print('PASS upstream failures expose a safe error class and keep private details in server logs')
 finally:server.shutdown();server.server_close();m.CACHE.close()
