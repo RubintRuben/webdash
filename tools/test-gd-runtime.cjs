@@ -1190,7 +1190,9 @@ test('saved axis scales take precedence over legacy uniform scale for artwork an
   ]) {
     const l=fixture(['1,1,2,200,3,200,'+properties]);
     near(l.gdObjects[0].scaleX,sx);near(l.gdObjects[0].scaleY,sy);
-    near(l.objects[0].w,60*Math.abs(sx));near(l.objects[0].h,60*Math.abs(sy));
+    // Native CCRect clamps signed extents after calculating their origin.
+    near(l.objects[0].w,60*Math.max(0,sx));near(l.objects[0].h,60*Math.max(0,sy));
+    near(l.objects[0].x,400-30*Math.min(0,sx));near(l.objects[0].y,400-30*Math.min(0,sy));
   }
 });
 
@@ -4115,6 +4117,25 @@ test('Start Pos camera settling consumes entry tweens before the first displayed
   c.settleStart();near(c.values.rotation,90);near(c.values.zoom,.7);assert.equal(c.tweens.length,0);
   c.trigger({id:2015,raw:{68:'0',10:'1'}});c.step(.5);near(c.values.rotation,45);
 });
+test('Start Pos Reset Camera clears static locks, offsets, edges and rotation while retaining zoom and free mode',()=>{
+ const l=fixture(['1,1764,2,100,3,200,57,1']),c=l.cameraState;
+ c.freeMode=true;c.trigger({id:1913,raw:{371:'.6',10:'2'}});
+ c.trigger({id:1914,raw:{71:'1',10:'1'}});c.trigger({id:1916,raw:{28:'30',29:'-40',10:'3'}});
+ c.trigger({id:2015,raw:{68:'90',10:'2'}});c.trigger({id:2062,raw:{164:'4',51:'1'}});
+ c.resetStartCamera();c.settleStart();
+ assert.equal(c.targets.x,null);assert.equal(c.targets.y,null);assert.equal(Object.keys(c.edges).length,0);
+ for(const key of ['rotation','offsetX','offsetY','staticX','staticY'])near(c.values[key],0);
+ near(c.values.zoom,.6);assert.equal(c.freeMode,true);assert.equal(c.tweens.length,0);
+});
+test('Eclipse outlines hazardous and safe slopes in the configured solid colour and ordinary hazards in red',()=>{
+ const l=fixture(['1,289,2,100,3,100','1,8,2,200,3,100']),ps=new context.testAPI.PlayerState(),sc={_state:ps,_playerWorldX:200,_getMirrorVisualScale:()=>1};
+ const p=Object.create(context.testAPI.PlayerObject.prototype);Object.assign(p,{p:ps,_scene:sc,_gameLayer:l,_rotation:0,_hitboxTrail:[]});sc._player=p;
+ const slope=l.objects.find(o=>o.type==='slope');assert.ok(slope);slope.slopeIsHazard=true;
+ const colors=[];const g={clear(){},lineStyle(w,c){colors.push(c);},fillStyle(){},fillPath(){},fillCircle(){},beginPath(){},moveTo(){},lineTo(){},closePath(){},strokePath(){},strokeCircle(){}};
+ p.drawHitboxes(g,0,0);assert.equal(colors[0],0x0000ff);assert.equal(colors[1],0xff0000);
+ context.GDHacks={state:{hitboxCustomColors:true,hitboxSolid:'#1248ab'}};colors.length=0;
+ p.drawHitboxes(g,0,0);assert.equal(colors[0],0x1248ab);assert.equal(colors[1],0xff0000);delete context.GDHacks;
+});
 test('portal helpers match native trimmed-front positions rather than the untrimmed source rectangle',()=>{
   const r=new context.GDRenderer(scene);
   r.frames.get=name=>({slot:0,w:name==='portal_17_front_001.png'?33.5:23.5,h:84.5,cw:44.5,ch:84.5,ox:11,oy:0,u0:0,v0:0,u1:1,v1:1});
@@ -4134,5 +4155,35 @@ test('native Free particle rotation changes emission angle without scaling its e
  const ps=new context.GDParticleSystem(r,o,{PositionType:0,Angle:-90,Speed:6,Life:.5});ps.sample=v=>v;ps.spawn();
  near(ps.particles[0].vx,Math.cos(-150*Math.PI/180)*6);near(ps.particles[0].vy,Math.sin(-150*Math.PI/180)*6);
  assert.deepEqual(Array.from(ps.emitterPose().m),[1,0,0,1]);
+});
+test('animated colour layers retain their captured negative z order behind the bright main frame',()=>{
+ const r=new context.GDRenderer(scene);
+ r.frames.get=name=>name?.endsWith('_001.png')?{slot:0,w:10,h:10,cw:10,ch:10,ox:0,oy:0}:null;
+ const o=r.addObject(parseObject('1,2047,2,100,3,100'));
+ assert.equal(o.parts[0].detail,true);assert.equal(o.parts[1].detail,false);
+});
+test('pixel-sheet candle colour frames retain native scale instead of the half-resolution fire scale',()=>{
+ const r=new context.GDRenderer(scene);
+ r.frames.get=name=>name?.endsWith('_001.png')?{slot:0,w:5,h:9,cw:5,ch:9,ox:0,oy:0}:null;
+ const candle=r.addObject(parseObject('1,2630,2,200,3,170'));
+ for(const parts of [candle.parts,...candle.animation])for(const part of parts)near(part.matrix[0],1);
+ const fire=r.addObject(parseObject('1,2047,2,300,3,170'));
+ near(fire.parts.find(p=>p.detail).matrix[0],2);
+});
+test('negative saved solid and spike axes keep native zero extents and signed rectangle origins',()=>{
+ const l=fixture(['1,1,2,50,3,15,128,-1,129,1,57,9','1,8,2,80,3,15,128,-1,129,1,57,9']);
+ const solid=l.objects.find(o=>o.type==='solid'),spike=l.objects.find(o=>o.type==='hazard');
+ near(solid.x,130);near(solid.y,30);near(solid.w,0);near(solid.h,60);
+ near(spike.x,166);near(spike.y,30);near(spike.w,0);near(spike.h,24);
+ l._translateGroup(9,100,20);near(solid.x,230);near(spike.x,266);
+ l.resetMoveTriggers();near(solid.x,130);near(spike.x,166);near(solid.w,0);near(spike.w,0);
+});
+test('a reversing dual player does not reverse its partner when Reverse Sync is saved',()=>{
+ const old={state:context.settingsMap,p1:scene._player,p2:scene._player2,dual:scene._isDual};
+ try{context.settingsMap={kA42:'1'};scene._isDual=true;
+  const primary={p:{isGoingLeft:false}},secondary={p:{isGoingLeft:false,isBall:false}};
+  scene._player=primary;scene._player2=secondary;secondary._scene=scene;
+  vm.runInContext('PlayerObject.prototype.reversePlayer',context).call(secondary);assert.equal(secondary.p.isGoingLeft,true);assert.equal(primary.p.isGoingLeft,false);
+ }finally{context.settingsMap=old.state;scene._player=old.p1;scene._player2=old.p2;scene._isDual=old.dual;}
 });
 console.log(passes + ' regression tests passed.');

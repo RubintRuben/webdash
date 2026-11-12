@@ -1,33 +1,44 @@
 (function(){
   'use strict';
-  let banner,wakePromise,readyAt=0,unavailable=false,hideTimer;
+  let banner,inline,wakePromise,readyAt=0,unavailable=false,hideTimer,waking=false;
   const assets=new Map();
+  const subscribers=new Set();
   function mount(){
     if(banner)return banner;
     banner=document.createElement('aside');banner.id='gd-download-status';banner.hidden=true;banner.setAttribute('role','status');banner.setAttribute('aria-live','polite');
-    banner.innerHTML='<strong></strong><span></span><progress max="1" value="0"></progress>';
+    banner.innerHTML='<strong></strong><span></span>';
     document.body.appendChild(banner);return banner;
   }
-  function notice(title,detail='',fraction=null){
+  function notice(title,detail=''){
     const el=mount();clearTimeout(hideTimer);el.hidden=false;el.querySelector('strong').textContent=title;el.querySelector('span').textContent=detail;
-    const bar=el.querySelector('progress');if(fraction===null)bar.removeAttribute('value');else bar.value=fraction;
+  }
+  function snapshot(keys){
+    const rows=[...assets.values()].filter(x=>!keys||keys.has(x.key)),done=rows.filter(x=>x.done).length,failed=rows.filter(x=>x.failed).length;
+    const active=rows.some(x=>!x.done&&!x.failed),known=rows.length>0&&rows.every(x=>x.total>0||x.done||x.failed);
+    const fraction=rows.length?rows.reduce((sum,x)=>sum+(x.done?1:x.total>0?Math.min(1,x.loaded/x.total):0),0)/rows.length:0;
+    const sounds=rows.filter(x=>x.key.startsWith('sfx:')),music=rows.filter(x=>x.key.startsWith('song:'));
+    const label=sounds.length?'Downloading sounds':music.length?'Downloading song':'Downloading';
+    return {rows,done,failed,active,waking,fraction,known,
+      text:waking&&active?'Connecting...':active?`${label}... ${known?Math.floor(fraction*100)+'%':done+'/'+rows.length}`:failed?'Download failed':rows.length?'Download complete':'',
+      detail:sounds.length?`SFX: ${sounds.filter(x=>x.done).length}/${sounds.length}${music.length?'  Music: '+music.filter(x=>x.done).length+'/'+music.length:''}`:''};
   }
   function update(){
-    if(wakePromise)return;
-    const rows=[...assets.values()],done=rows.filter(x=>x.done).length,failed=rows.filter(x=>x.failed).length;
-    if(!rows.length){if(banner)banner.hidden=true;return;}
-    const active=rows.find(x=>!x.done&&!x.failed),known=rows.filter(x=>x.total>0),bytes=known.reduce((s,x)=>s+x.loaded,0),total=known.reduce((s,x)=>s+x.total,0);
-    notice(failed?'Some sounds could not be downloaded':active?'Downloading music and sound effects…':'Download complete',
-      active?`${done}/${rows.length} files · ${active.key.replace('song:','Music #').replace('sfx:','SFX #')} · ${(bytes/1048576).toFixed(1)} MB${total?' / '+(total/1048576).toFixed(1)+' MB':''}`:
-      `${done}/${rows.length} files${failed?' · retry the level to retry missing sounds':''}`,active?(known.length===rows.length?bytes/Math.max(1,total):done/rows.length):1);
-    if(!active)hideTimer=setTimeout(()=>{if(banner)banner.hidden=true;},failed?8000:1800);
+    const state=snapshot();let bound=false;
+    for(const entry of subscribers){const value=entry.keys?snapshot(entry.keys):state;entry.fn(value);if(value.active)bound=true;}
+    if(!inline){inline=document.createElement('aside');inline.id='gd-download-progress';inline.hidden=true;inline.setAttribute('role','status');inline.setAttribute('aria-live','polite');inline.innerHTML='<b aria-hidden="true">↓</b><div><strong></strong><progress max="1" value="0"></progress><span></span></div>';document.body.appendChild(inline);}
+    inline.hidden=bound||(!state.active&&!waking);
+    if(!inline.hidden){inline.querySelector('strong').textContent=state.text||'Connecting...';inline.querySelector('span').textContent=state.detail;
+      const bar=inline.querySelector('progress');if(state.known)bar.value=state.fraction;else bar.removeAttribute('value');}
   }
   window.GDDownloads={
     error(title,detail){notice(title,detail,0);hideTimer=setTimeout(()=>{if(banner)banner.hidden=true;},12000);},
+    subscribe(fn,keys){const entry={fn,keys:keys?new Set(keys):null};subscribers.add(entry);fn(snapshot(entry.keys));update();return()=>{subscribers.delete(entry);update();};},
+    get state(){return snapshot();},
     plan(keys){assets.clear();for(const key of keys)assets.set(key,{key,loaded:0,total:0});update();},
     begin(key){if(!assets.has(key)&&![...assets.values()].some(x=>!x.done&&!x.failed))assets.clear();assets.set(key,{key,loaded:0,total:0});update();},
     progress(key,loaded,total){const row=assets.get(key);if(row){Object.assign(row,{loaded,total});update();}},
-    finish(key,success=true){const row=assets.get(key);if(row){row.done=success;row.failed=!success;update();}},
+    finish(key,success=true){const row=assets.get(key);if(row&&!row.done&&!row.failed){row.done=success;row.failed=!success;if(!success)this.error('Download failed','Some sounds could not be downloaded. Please try again.');update();}},
+    cancel(key){assets.delete(key);update();},
     get assets(){return [...assets.values()].map(x=>({...x}));}
   };
   window.readGdAudioResponse=async(response,key)=>{
@@ -43,8 +54,7 @@
   };
   async function wake(){
     const base=window.getGdBackendBase();if(!base||unavailable)return false;
-    const started=performance.now();let announced=false,lastError;
-    const delayed=setTimeout(()=>{announced=true;notice('Connecting to download server…','The free server may be waking up. Downloads start when it is ready.');},1200);
+    const started=performance.now();let lastError;waking=true;update();
     try{
       while(performance.now()-started<95000){
         try{
@@ -53,18 +63,17 @@
           if(res.ok&&(await res.json()).ready){readyAt=performance.now();return true;}
           lastError=new Error('Download server HTTP '+res.status);
         }catch(e){lastError=e;}
-        if(announced)notice('Connecting to download server…',`${Math.floor((performance.now()-started)/1000)}s · please wait for the server to wake up`);
         await new Promise(r=>setTimeout(r,1000));
       }
       notice('Download server unavailable','Please retry the download in a moment.');throw lastError||new Error('Download server unavailable');
-    }finally{clearTimeout(delayed);}
+    }finally{waking=false;update();}
   }
   window.ensureGdBackend=async signal=>{
     if(readyAt&&performance.now()-readyAt<60000)return true;
     if(!wakePromise){let failed=false;wakePromise=wake().catch(error=>{failed=true;throw error;}).finally(()=>{
       wakePromise=null;
-      if(!failed){if(assets.size)update();else if(banner)banner.hidden=true;}
-      else hideTimer=setTimeout(()=>{if(banner)banner.hidden=true;},8000);
+      update();
+      if(failed)hideTimer=setTimeout(()=>{if(banner)banner.hidden=true;},8000);
     });}
     if(!signal)return wakePromise;
     if(signal.aborted)throw signal.reason;

@@ -65,6 +65,8 @@ const phaserConfig = {
     // ship/cube appear to vibrate while the camera moves. UV inset handling
     // already fixes atlas seams, so retain sub-pixel layer alignment here.
     roundPixels: false,
+    // Request the browser's low-latency canvas path when supported.
+    desynchronized: true,
     powerPreference: "high-performance"
   },
   scale: {

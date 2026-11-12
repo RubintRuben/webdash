@@ -4263,9 +4263,14 @@ window.LevelObject = class LevelObject {
       this._addCollisionToSection(slopeCollider);
     } else if (objectDef.type === solidType && objectDef.gridW > 0 && objectDef.gridH > 0) {
       const native = window.GD_OBJECTS?.[levelObj.id];
-      const w = (native?.w > 0 ? native.w * (native.ws ?? 1) * 2 : objectDef.gridW * a) * colliderScale.x;
-      const h = (native?.h > 0 ? native.h * (native.hs ?? 1) * 2 : objectDef.gridH * a) * colliderScale.y;
-      const collider = new Collider(solidType, worldX, worldY, w, h, levelObj.rot || 0);
+      const signedW = (native?.w > 0 ? native.w * (native.ws ?? 1) * 2 : objectDef.gridW * a) * signedColliderScale.x;
+      const signedH = (native?.h > 0 ? native.h * (native.hs ?? 1) * 2 : objectDef.gridH * a) * signedColliderScale.y;
+      // getObjectRect positions with the signed size; CCRect then clamps
+      // negative extents to zero. Mirroring art is not a full-size solid.
+      const quarter = Math.abs(Math.abs(Math.fround(levelObj.rot || 0)) - 180) === 90;
+      const dx = Math.min(0, quarter ? signedH : signedW) / -2;
+      const dy = Math.min(0, quarter ? signedW : signedH) / -2;
+      const collider = new Collider(solidType, worldX + dx, worldY + dy, Math.max(0, signedW), Math.max(0, signedH), levelObj.rot || 0);
       collider.objid = levelObj.id;
       registerCollider(collider);
       this.objects.push(collider);
@@ -4306,11 +4311,16 @@ window.LevelObject = class LevelObject {
         hitH = worldHitboxRadius * 2;
       }
 
+      const signedW = hitW * signedColliderScale.x, signedH = hitH * signedColliderScale.y;
       hitW *= colliderScale.x;
       hitH *= colliderScale.y;
 
       if (hitW > 0 && hitH > 0) {
-        const collider = new Collider(hazardType, worldX, worldY, hitW, hitH, levelObj.rot || 0);
+        const quarter = Math.abs(Math.abs(Math.fround(levelObj.rot || 0)) - 180) === 90;
+        const dx = hasHitboxRadius ? 0 : Math.min(0, quarter ? signedH : signedW) / -2;
+        const dy = hasHitboxRadius ? 0 : Math.min(0, quarter ? signedW : signedH) / -2;
+        const collider = new Collider(hazardType, worldX + dx, worldY + dy,
+          hasHitboxRadius ? hitW : Math.max(0, signedW), hasHitboxRadius ? hitH : Math.max(0, signedH), levelObj.rot || 0);
         if (hasHitboxRadius) collider.hitbox_radius = worldHitboxRadius * Math.max(colliderScale.x, colliderScale.y);
         registerCollider(collider);
         this.objects.push(collider);

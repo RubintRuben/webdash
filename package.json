@@ -15,6 +15,7 @@
     "test:browser": "node tools/test-gd-browser.cjs",
     "test:gmd-import": "node tools/test-gmd-import.cjs",
     "test:fidelity": "node tools/test-gd-fidelity-fixes.cjs",
-    "test:reported": "node tools/test-gd-reported-fixes.cjs"
+    "test:reported": "node tools/test-gd-reported-fixes.cjs",
+    "test:input-fidelity": "node tools/test-gd-input-fidelity.cjs"
   }
 }

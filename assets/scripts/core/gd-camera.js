@@ -22,13 +22,29 @@
       this.velocity = { x: 0, y: 0 }; this.lastPosition = null;
       this.follow = { leadX: 150, leadY: 0, lastX: null, lastY: null, crossX: null, frame: -1 };
     }
+    resetStartCamera() {
+      // GJBaseGameLayer::loadStartPos (Steam 33e5a5): kA35 resets
+      // static cameras, angle and offsets AFTER evaluating earlier triggers.
+      // The authored zoom and free-camera mode are retained.
+      this.targets = { x: null, y: null }; this.edges = {};
+      for (const key of ['rotation', 'offsetX', 'offsetY', 'staticX', 'staticY']) this.values[key] = 0;
+      this.targetRotation = 0;
+      this.tweens = this.tweens.filter(t => t.property === 'zoom');
+    }
     settleStart() {
       // Loading a Start Pos evaluates its existing camera commands before
       // the first displayed frame; it must not replay their entry animation.
+      // Static exits normally defer their first tick. A Start Pos has no
+      // entry tick to display, so finish those as well as ordinary tweens.
+      for (const tween of this.tweens) tween.bornFrame = null;
       const remaining=Math.max(0,...this.tweens.map(t=>t.duration-t.elapsed));
       this.step(remaining+1/240);
       this.velocity={x:0,y:0};this.lastPosition=null;this.jumpX=null;
-      delete this.follow.turnX;delete this.follow.turnY;
+      const s=this.level._scene,u=this.level.gameplayState?.u||{x:1,y:0};
+      const direction=s._state?.isGoingLeft?-1:1,z=Math.max(.01,this.values.zoom);
+      this.follow={leadX:u.x*direction*150/z,leadY:u.y*direction*150/z,
+        lastX:s._playerWorldX,lastY:s._state.y,crossX:null,frame:-1};
+      this.followStep(0);
     }
     setMode(raw) {
       const wasFree = this.freeMode;
@@ -57,7 +73,9 @@
       return snap || this.freeEasing <= 1 ? 1 : Math.min(1, Math.max(0, frameDelta) / this.freeEasing);
     }
     followStep(frameDelta) {
-      const s = this.level._scene, f = this.follow, u = this.level.gameplayState?.u || { x: 1, y: 0 };
+      const s = this.level._scene, f = this.follow, axes = this.level.gameplayState?.u || { x: 1, y: 0 };
+      const direction = s._state?.isGoingLeft ? -1 : 1;
+      const u = { x: axes.x * direction, y: axes.y * direction };
       const width = s.scale?.width || 1138, z = Math.max(.01, this.values.zoom);
       const px = s._playerWorldX, py = s._state.y, sideways = Math.abs(u.y) > .5;
       f.previousX = s._cameraX; f.previousY = s._cameraY;

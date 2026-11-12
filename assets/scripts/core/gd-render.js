@@ -366,18 +366,27 @@
         main.replace(/_looped_(\d+)\.png$/, "_2_looped_$1.png"),
         main.replace(/_(\d+)\.png$/, "_2_$1.png")];
       const frame = candidates.find(f => f !== main && frames.get(f));
-      if (frame) overlays = [{ frame, z: 100 }];
+      if (frame) {
+        // Several animated families have no debug tint in the legacy
+        // capture, but retain the native colour sprite's order and pose.
+        // Its -100 layer belongs behind the main animation (Dash's burst
+        // and torches); putting it at +100 paints over the bright centre.
+        const captured = legacy?.children?.find(child => child.frame === frame);
+        overlays = [{ ...captured, frame, z: captured?.z ?? 100 }];
+      }
     }
     for (const overlay of overlays) {
       // If setupCustomSprites already attached it, assign its channel in place.
       let existing = null;
       walkTree(tree, node => { if (node !== tree && node[0] === overlay.frame && node[7] === (overlay.rot || 0)) existing ||= node; });
       if (existing) { existing[10] |= 16; continue; }
-      // EnhancedGameObject's animated colour sprite is half resolution.
+      // The fire-sheet EnhancedGameObject colour animation is half resolution.
       // Native setupAnimation nests its frame player at scale 2 (e.g.
       // Fire_01_2_looped and fire_b_02_2). A flat scale-1 reconstruction
       // shrank the coloured flame inside the full-sized outer animation.
-      const scale = (Number(overlay.scale) > 0 ? Number(overlay.scale) : 1) * (def.t === 7 && def.ct === 4 ? 2 : 1);
+      // Pixel-sheet animations use full-resolution colour frames; doubling
+      // those makes Dash's candle flame and its pixels twice their native size.
+      const scale = (Number(overlay.scale) > 0 ? Number(overlay.scale) : 1) * (def.t === 7 && def.ct === 4 && def.pm === 3 ? 2 : 1);
       // localDx/Dy in allObjects are web world units (2 per GD point).
       (tree[14] ||= []).unshift([overlay.frame, root.cw / 2 + (overlay.localDx || 0) / 2,
         root.ch / 2 - (overlay.localDy || 0) / 2, 0.5, 0.5, scale, scale,

@@ -677,16 +677,12 @@ class PlayerObject {
     if (this.p === this._scene._state2) this._scene._secondaryWorldX = x;
     else this._scene._playerWorldX = x;
   }
-  reversePlayer(object = null, sync = true) {
+  reversePlayer(object = null) {
     if (object && object._eeLevelObject?._raw?.[117] !== "1") return;
     // PlayerObject::reversePlayer / doReversePlayer (4f6740, 4f6830):
     // a reversing pad/ring turns this player, independently of its dual.
     this.p.isGoingLeft = !this.p.isGoingLeft;
     if (this.p.isBall) { this.stopRotation(); this._runBallRotation(); }
-    if (sync && String(window.settingsMap?.kA42 ?? "0") === "1" && this._scene?._isDual) {
-      const other = this === this._scene._player ? this._scene._player2 : this._scene._player;
-      if (other) other.p.isGoingLeft = this.p.isGoingLeft;
-    }
   }
   _markActivatedOrbSprites(gameObj) {
     if (!gameObj) return;
@@ -5651,6 +5647,9 @@ if (this.p.isFlying || this.p.isUfo) {
     let _touchingTeleportDuringRespawnIgnore = false;
     let seatedRamp = null;
     let scanNextGround = false;
+    // Touch Toggle may expose a portal in this collision pass. Waiting
+    // until the solids delayed DEPRIVATION's ship entry by one tick.
+    this._gameLayer.checkTouchToggleTriggers?.(pieceWidth, playersY);
     const _0x198534 = this._gameLayer.getNearbySectionObjects(pieceWidth, playersY);
     // Modifier objects are checked before solids, independent of level order.
     this._updateCollisionModifiers(_0x198534, pieceWidth, playersY, this.p.isWave ? waveHitSize : playerSize);
@@ -6539,7 +6538,7 @@ if (this.p.isFlying || this.p.isUfo) {
         // updateDebugDraw (3169c0): hazards red, solids and ramps blue, passable
         // blocks cyan, and every object the body activates green. The drawn
         // box is the contact box: a solid never turns, an oblique object does.
-        const colour=obj.type===hazardType||obj.slopeIsHazard?color('hitboxDanger',0xff0000):obj.type===slopeType?color('hitboxSolid',0x0000ff):
+        const colour=obj.type===slopeType?color('hitboxSolid',0x0000ff):obj.type===hazardType?color('hitboxDanger',0xff0000):
           obj.type===solidType?(obj.passable?0x00ffff:color('hitboxSolid',0x0000ff)):color('hitboxOther',0x00ff00);
         if(!(obj.w>0&&obj.h>0)&&!(obj.hitbox_radius>0))continue;
         style(colour);

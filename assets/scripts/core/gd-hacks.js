@@ -3,6 +3,8 @@
 (function () {
   'use strict';
   const scene = () => window.scene?.get('GameScene');
+  const heldJumpKeys = window.GDHeldJumpKeys = new Set();
+  window.addEventListener('blur', () => heldJumpKeys.clear());
   const state = { scale: 1, accent: '#ab2cb7', labels: true, decimals: 2, animate: true, animationTime: .3,
     positions: {}, keys: { Noclip: 'Digit1' }, keyTargets:{}, values: {},
     noclipP1:true, noclipP2:true, noclipAccuracyLimit:95, noclipDeathLimit:2,
@@ -376,8 +378,9 @@
     // listener. It must receive letters before any mod keybind consumes them.
     if(scene()?._searchHtmlInput?.focused)return;
     const playing=scene();
+    if (['Space','ArrowUp','KeyW','KeyL'].includes(e.code)) heldJumpKeys.add(e.code);
     if(window.clickBetweenFrames&&playing&&!playing._menuActive&&!playing._slideIn&&!playing._paused&&!playing._levelWon&&!playing._state?.isDead&&['Space','ArrowUp','KeyW','KeyL'].includes(e.code)&&!/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)){
-      e.preventDefault();e.stopImmediatePropagation();if(!e.repeat){const s=scene();s?._queueJumpEvent(true,e.timeStamp,s._isTwoPlayerMode()&&['ArrowUp','KeyL'].includes(e.code)?2:1);}return;
+      e.preventDefault();e.stopImmediatePropagation();if(!e.repeat){const s=scene();s?._queueJumpEvent(true,e.timeStamp,s._isTwoPlayerMode()&&['ArrowUp','KeyL'].includes(e.code)?2:1,'key:'+e.code);}return;
     }
     if (!/INPUT|TEXTAREA|SELECT/.test(e.target.tagName) && !e.target.isContentEditable) {
       for(const [title,key] of Object.entries(state.keys))if(e.code===key){
@@ -388,10 +391,11 @@
     }
   }, true);
   window.addEventListener('keyup', e => {
+    heldJumpKeys.delete(e.code);
     if(scene()?._searchHtmlInput?.focused&&!window.eclipseMenuOpen)return;
     if (window.GDIsTextInput(e.target) && !window.eclipseMenuOpen) { e.stopImmediatePropagation(); return; }
     if(e.code===state.keys['Step Key'])window._frameStepHeld=false;
-    if(window.clickBetweenFrames&&['Space','ArrowUp','KeyW','KeyL'].includes(e.code)&&!window.eclipseMenuOpen){e.preventDefault();e.stopImmediatePropagation();const s=scene();s?._queueJumpEvent(false,e.timeStamp,s._isTwoPlayerMode()&&['ArrowUp','KeyL'].includes(e.code)?2:1);return;}
+    if(window.clickBetweenFrames&&['Space','ArrowUp','KeyW','KeyL'].includes(e.code)&&!window.eclipseMenuOpen){const s=scene();if(s&&!s._menuActive&&!s._paused&&!s._slideIn){e.preventDefault();e.stopImmediatePropagation();s._queueJumpEvent(false,e.timeStamp,s._isTwoPlayerMode()&&['ArrowUp','KeyL'].includes(e.code)?2:1,'key:'+e.code);return;}}
     if ((window.eclipseMenuOpen&&!root.contains(e.target)) || e.code === 'Tab') e.stopImmediatePropagation();
   }, true);
   window.addEventListener('resize', dimensions);

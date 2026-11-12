@@ -277,6 +277,10 @@
           if (name === "hideP2") this.hidden[2] = v === 1;
         }
       }
+      for (const [key, index] of [[165, 1], [199, 2]]) {
+        const value = num(r[key]);
+        if (value === 1 || value === -1) this.scene?._setPlayerControlsDisabled?.(index, value === 1);
+      }
       if (num(r[573]) === 1) this.options.respawnTime = Math.max(0, num(r[574], 1));
       else if (num(r[573]) === -1) delete this.options.respawnTime;
     }

@@ -2,7 +2,7 @@
 
 [Éles játékoldal](https://webdash-play-ajtg.onrender.com/)
 
-**Ismert korlát (2026-11-10):** a GD szervere Cloudflare 1005 hibával tiltja a Render hálózatát. Emiatt az online pályakeresés/letöltés és a GD-s zenei metaadatok jelenleg nem érhetők el innen. A beépített pályák, GMD-import és közvetlen könyvtári zene/SFX letöltés használható. Az API öt percig szünetelteti a tiltott kéréseket; a felület jelzi az okot. A feloldáshoz a GD oldalán engedélyezés vagy engedélyezett API-szolgáltatás szükséges.
+**Online elérés (2026-11-12):** a GD szervere Cloudflare 1005 hibával tiltja a Render hálózatát. A kliens ezért előbb a közvetlen böngészős kapcsolatot és a már beállított GD-proxyt próbálja, a Render API tartalék útvonal. A böngészős proxyn ellenőrzött a pályakeresés és a teljes pályaletöltés. A külön dalazonosítós zeneletöltés Render-backend mellett is működik. Egy útvonal hibája csak az összes elérhető útvonal sikertelensége után jelenik meg a felületen.
 
 A konfiguráció két szolgáltatást hoz létre:
 
@@ -25,7 +25,7 @@ Ha a frontend buildje hiányzó API-címet jelez, ellenőrizd, hogy a `webdash-a
 
 ## Mit jelent a Free csomag?
 
-A Render jelenlegi szabályai szerint a backend 15 perc tétlenség után leáll, és az ébresztése körülbelül egy perc lehet. A játék felülete a külön Static Site-ról eközben is elérhető. A letöltés megvárja a szervert, és felül jelzi az ébredést, majd a zenék és SFX-fájlok betöltését.
+A Render jelenlegi szabályai szerint a backend 15 perc tétlenség után leáll, és az ébresztése körülbelül egy perc lehet. A játék felülete a külön Static Site-ról eközben is elérhető. Az elsőként próbált böngészős útvonalak nem várnak az alvó szerverre. Ha a tartalék backend szükséges, a kapcsolódás és a zene/SFX letöltése alul, a letöltési nyíl melletti folyamatjelzőn látszik. Felül csak hiba jelenik meg.
 
 Helyi tesztben 20 egyidejű azonos, 1 MiB-os letöltés egyetlen külső kérést használt. A különböző letöltések legfeljebb 6 külső kérést futtatnak egyszerre; a cache 384 MiB, a fájlméret felső határa 48 MiB. Ez a helyi ellenőrzés még nem Renderen mért kapacitásígéret. A tényleges sebesség a Free géptől, a külső GD-szervertől, a letöltések méretétől és a havi adatforgalmi kerettől is függ.
 

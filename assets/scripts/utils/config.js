@@ -24,41 +24,47 @@ window.getGdApiUrl = function (path) {
   if (!base) return null;
   return `${base}${path.startsWith("/") ? "" : "/"}${path}`;
 };
+async function fetchGdRoute(url, options, timeoutMs) {
+  const connection = new AbortController();
+  const timer = setTimeout(() => connection.abort(), timeoutMs);
+  const signal = options.signal ? AbortSignal.any([options.signal, connection.signal]) : connection.signal;
+  try { return await fetch(url, { ...options, signal }); }
+  finally { clearTimeout(timer); }
+}
+// Try browser-accessible routes before waking a cold hosting instance. A
+// hosting-network denial only disables that route, not independent relays.
 window.fetchGdApi = async function (path, options = {}) {
   const directUrl = window.useDirectInternet ? window.getGdApiUrl(path) : null;
   const proxyBase = (window._gdProxyUrl || "").replace(/\/$/, "");
   const proxyUrl = proxyBase ? `${proxyBase}${path.startsWith("/") ? "" : "/"}${path}` : null;
-  const urls = [];
-  const backend=window.getGdBackendBase?.();
-  if (backend && /^\/?(getGJLevels21|downloadGJLevel22|getGJSongInfo)\.php$/.test(path) && await window.ensureGdBackend(options.signal))
-    urls.push(backend+'/gd-api/' + path.replace(/^\//, ''));
-  if (directUrl) urls.push(directUrl);
-  if (proxyUrl && proxyUrl !== directUrl) urls.push(proxyUrl);
+  const urls = [...new Set([directUrl, proxyUrl].filter(Boolean))];
+  const backend = window.getGdBackendBase?.();
+  const backendUrl = backend && /^\/?(getGJLevels21|downloadGJLevel22|getGJSongInfo)\.php$/.test(path)
+    && !(window._gdBackendDeniedUntil > Date.now()) ? backend + '/gd-api/' + path.replace(/^\//, '') : null;
+  if (backendUrl) urls.push(backendUrl);
   let lastError = null;
   for (const url of urls) {
-    const controller = new AbortController();
-    const abort = () => controller.abort(options.signal?.reason);
     if (options.signal?.aborted) throw options.signal.reason || new DOMException('Aborted', 'AbortError');
-    options.signal?.addEventListener('abort', abort, { once: true });
-    const timeout = setTimeout(() => controller.abort(), url.startsWith(backend+'/gd-api/')?65000:7000);
+    if (url === backendUrl) {
+      try { if (!await window.ensureGdBackend(options.signal)) continue; }
+      catch (error) { if (options.signal?.aborted) throw error; lastError = error; continue; }
+    }
     try {
-      const response = await fetch(url, { ...options, signal: controller.signal,
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded', ...options.headers } });
+      const response = await fetchGdRoute(url, { ...options,
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', ...options.headers } }, url === backendUrl ? 65000 : 12000);
       if (response.ok) return response;
-      if (response.headers.get('X-WebDash-Upstream-Error') === 'GDNetworkDenied:1005') {
-        window.GDDownloads?.error('Online levels unavailable', 'The GD server blocks this hosting network. Built-in levels and GMD imports remain available.');
-        const error = new Error('The GD server currently blocks this hosting network.');
-        error.code = 'GD_NETWORK_DENIED';
-        throw error;
-      }
       lastError = new Error(`HTTP ${response.status}`);
+      if (response.headers.get('X-WebDash-Upstream-Error') === 'GDNetworkDenied:1005') {
+        window._gdBackendDeniedUntil = Date.now() + 300000;
+        lastError = new Error('The GD server currently blocks this hosting network.');
+        lastError.code = 'GD_NETWORK_DENIED';
+      }
     } catch (error) {
-      if (options.signal?.aborted || error.code === 'GD_NETWORK_DENIED') throw error;
+      if (options.signal?.aborted) throw error;
       lastError = error;
-    } finally {
-      clearTimeout(timeout); options.signal?.removeEventListener('abort', abort);
     }
   }
+  if (lastError?.code === 'GD_NETWORK_DENIED') window.GDDownloads?.error('Online levels unavailable', 'The GD server blocks this hosting network and the alternate routes could not be reached. Please retry.');
   throw lastError || new Error("No GD API endpoint available");
 };
 window.getGdAudioUrl = function (songUrl) {
@@ -70,20 +76,23 @@ window.fetchGdAudio = async function (songUrl, options = {}) {
   const directUrl = window.useDirectInternet ? songUrl : null;
   const proxyBase = (window._gdProxyUrl || "").replace(/\/$/, "");
   const proxyUrl = proxyBase ? `${proxyBase}/audio-proxy?url=${encodeURIComponent(songUrl)}` : null;
-  const urls = [];
-  const backend=window.getGdBackendBase?.();
-  if (backend && /^https:\/\/(?:[^/]+\.ngfiles\.com|geometrydash(?:files|content)\.b-cdn\.net)\//.test(songUrl) && await window.ensureGdBackend(options.signal))
-    urls.push(backend+'/gd-audio?url=' + encodeURIComponent(songUrl));
-  if (directUrl) urls.push(directUrl);
-  if (proxyUrl && proxyUrl !== directUrl) urls.push(proxyUrl);
+  const urls = [...new Set([directUrl, proxyUrl].filter(Boolean))];
+  const backend = window.getGdBackendBase?.();
+  const backendUrl = backend && /^https:\/\/(?:[^/]+\.ngfiles\.com|geometrydash(?:files|content)\.b-cdn\.net)\//.test(songUrl)
+    ? backend + '/gd-audio?url=' + encodeURIComponent(songUrl) : null;
+  if (backendUrl) urls.push(backendUrl);
   let lastError = null;
   for (const url of urls) {
+    if (options.signal?.aborted) throw options.signal.reason || new DOMException('Aborted', 'AbortError');
     try {
-      const response = await fetch(url, options);
+      if (url === backendUrl && !await window.ensureGdBackend(options.signal)) continue;
+      // Bound connection setup, while allowing a large song to keep streaming.
+      // The caller's abort signal continues to cancel its response body.
+      const response = await fetchGdRoute(url, options, 20000);
       if (response.ok) return response;
       lastError = new Error(`HTTP ${response.status}`);
     } catch (error) {
-      if(options.signal?.aborted)throw error;
+      if (options.signal?.aborted) throw error;
       lastError = error;
     }
   }
@@ -93,11 +102,9 @@ window.fetchGdSongAudio = async function (songId, options = {}) {
   const id = Number(songId);
   if (!Number.isSafeInteger(id) || id <= 0) throw new Error('Invalid song ID');
   if (id >= 10000000) return window.fetchGdAudio(`https://geometrydashfiles.b-cdn.net/music/${id}.ogg`, options);
-  if (!window.getGdBackendBase?.()) {
+  {
     try {
-      const response = await fetch(`https://fetchsongid.lasokar.workers.dev/?id=${id}`, {
-        ...options, signal: options.signal ? AbortSignal.any([options.signal, AbortSignal.timeout(15000)]) : AbortSignal.timeout(15000)
-      });
+      const response = await fetchGdRoute(`https://fetchsongid.lasokar.workers.dev/?id=${id}`, options, 15000);
       if (response.ok) return response;
     } catch (error) { if (options.signal?.aborted) throw error; }
   }

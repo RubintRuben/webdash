@@ -1031,6 +1031,7 @@ this._menuFsBtn = this.add.image(33, 33, "GJ_WebSheet", _0x28fa5b ? "toggleFulls
         const downloadBtnY = songBoxY + 40;
         const downloadBtn = this.add.image(downloadBtnX, downloadBtnY, "GJ_GameSheet03", "GJ_downloadBtn_001.png").setScrollFactor(0).setDepth(504).setInteractive();
         this._playOverlayObjects.push(downloadBtn);
+        this._bindSongDownloadProgress(this._playOverlayObjects, downloadBtnX, downloadBtnY, songBoxW - 130);
         let isDownloading = false;
         let abortController = null;
         let isDownloaded = false;
@@ -1072,7 +1073,10 @@ this._menuFsBtn = this.add.image(33, 33, "GJ_WebSheet", _0x28fa5b ? "toggleFulls
             await window.SongDB.save(lvl.customSongID, arrayBuf);
             window.GDDownloads?.finish(downloadKey);
           } catch (err) {
-            if (abortController === requestController) window.GDDownloads?.finish(downloadKey, false);
+            if (abortController === requestController) {
+              if (requestController.signal.aborted) window.GDDownloads?.cancel(downloadKey);
+              else window.GDDownloads?.finish(downloadKey, false);
+            }
             if (err.name === 'AbortError') {
               console.log('Download cancelled.');
             } else {
@@ -1116,7 +1120,7 @@ this._menuFsBtn = this.add.image(33, 33, "GJ_WebSheet", _0x28fa5b ? "toggleFulls
 
               if (songName && typeof songNameText !== "undefined" && songNameText) {
                 songNameText.setText(songName);
-                this._fitBitmapText(songTitleText, songBoxW - 100);
+                this._fitBitmapText(songNameText, songBoxW - 100);
               }
             })
             .catch(err => {
@@ -3667,7 +3671,8 @@ this._menuFsBtn = this.add.image(33, 33, "GJ_WebSheet", _0x28fa5b ? "toggleFulls
     this._expandHitArea(this._pauseBtn, 2);
     this._pauseBtn.on("pointerdown", () => this._pauseGame());
     this._escKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
-    this._escKey.on("down", () => {
+    this._escKey.on("down", (_key, event) => {
+      if (event?.repeat) return;
       if (this._levelSelectOverlay) {
         this._closeLevelSelect();
         return;
@@ -3815,21 +3820,21 @@ this._menuFsBtn = this.add.image(33, 33, "GJ_WebSheet", _0x28fa5b ? "toggleFulls
     this.input.mouse?.disableContextMenu();
     this.input.on("pointerdown", pointer => {
       if (!this._menuActive && !this._paused && !this._levelSelectOverlay && !this._levelWon && !window.isEditor) {
-        if(window.clickBetweenFrames){this._queueJumpEvent(true,pointer.event?.timeStamp,this._isTwoPlayerMode()&&pointer.button===2?2:1);return;}
+        if(window.clickBetweenFrames){this._queueJumpEvent(true,pointer.event?.timeStamp,this._isTwoPlayerMode()&&pointer.button===2?2:1,'pointer:'+pointer.button);return;}
         if(this._isTwoPlayerMode() && pointer.button===2) this._pushSecondPlayerButton();
         else this._pushButton();
       }
     });
     this.input.on("pointerup", pointer => {
       if (!this._menuActive && !this._paused && !this._levelSelectOverlay && !this._levelWon && !window.isEditor) {
-        if(window.clickBetweenFrames){this._queueJumpEvent(false,pointer.event?.timeStamp,this._isTwoPlayerMode()&&pointer.button===2?2:1);return;}
+        if(window.clickBetweenFrames){this._queueJumpEvent(false,pointer.event?.timeStamp,this._isTwoPlayerMode()&&pointer.button===2?2:1,'pointer:'+pointer.button);return;}
         if(this._isTwoPlayerMode() && pointer.button===2) this._releaseSecondPlayerButton();
         else this._releaseButton();
       }
     });
     if (!window.gdpointerup) {
       window.gdpointerup = true;
-      window.addEventListener("pointerup", event => { if(window.clickBetweenFrames){this._queueJumpEvent(false,event.timeStamp,this._isTwoPlayerMode()&&event.button===2?2:1);return;}if(this._isTwoPlayerMode() && event.button===2)this._releaseSecondPlayerButton();else this._releaseButton(true); });
+      window.addEventListener("pointerup", event => { if(window.clickBetweenFrames){this._queueJumpEvent(false,event.timeStamp,this._isTwoPlayerMode()&&event.button===2?2:1,'pointer:'+event.button);return;}if(this._isTwoPlayerMode() && event.button===2)this._releaseSecondPlayerButton();else this._releaseButton(true); });
     }
     if (!window.gdtouchend) {
       window.gdtouchend = true;
@@ -4744,6 +4749,10 @@ this._menuFsBtn = this.add.image(33, 33, "GJ_WebSheet", _0x28fa5b ? "toggleFulls
   _pauseGame() {
     if (!this._paused && !this._menuActive && !this._slideIn && !this._levelWon) {
       this._paused = true;
+      // A key already held when Escape arrives is not a request to resume.
+      this._pauseJumpWasDown = this._jumpKeysDown();
+      this._pauseResumeTimer?.remove();
+      this._pauseResumeTimer = null;
       this._pauseBtn.setVisible(false);
       this._audio.pauseMusic();
       this._setParticleTimeScale(0);
@@ -4754,6 +4763,8 @@ this._menuFsBtn = this.add.image(33, 33, "GJ_WebSheet", _0x28fa5b ? "toggleFulls
   }
   _resumeGame() {
     if (this._paused) {
+      this._pauseResumeTimer?.remove();
+      this._pauseResumeTimer = null;
       this._setParticleTimeScale(1);
       this._player?.setDeathAnimationPaused?.(false);
       this._player2?.setDeathAnimationPaused?.(false);
@@ -5284,7 +5295,7 @@ _buildSettingsPopup() {
             (v) => window.startPosSwitcher = v,
             (v) => {
                 if (!v) this._startPosIndex = -1;
-                if (this._startPosGui) this._startPosGui.setVisible(v);
+                if (this._startPosGui) this._startPosGui.setVisible(v && this._level.getStartPositions().length > 0);
                 const total = this._level.getStartPositions().length;
                 if (this._startPosText) this._startPosText.setText(`0/${total}`);
             },
@@ -7088,6 +7099,10 @@ _showwippopup() {
     }
     this._state.y = 30;
     this._state.onGround = true;
+    // Native setup leaves jumping unarmed until the first floor contact.
+    // A button held through the intro must jump on tick two, not tick one.
+    this._state.canJump = false;
+    this._attemptInputPending = true;
     this._level.additiveContainer.setVisible(true);
     this._level.container.setVisible(true);
     this._level.topContainer.setVisible(true);
@@ -7136,11 +7151,56 @@ _showwippopup() {
     this._applyLevelStartOptions();
     this._resetMirrorTransition(this._state.mirrored);
   }
-  _queueJumpEvent(down,stamp=performance.now(),player=1) {
+  _jumpKeysDown() {
+    return !!(this._spaceKey?.isDown || this._upKey?.isDown || this._wKey?.isDown || this._lKey?.isDown);
+  }
+  _restoreAttemptInput() {
+    if (!this._attemptInputPending || this._slideIn || this._menuActive || this._paused || this._state.isDead) return;
+    this._attemptInputPending = false;
+    if (!window.clickBetweenFrames || window.autoClicker) return;
+    // CBF suppresses Phaser's key state while playing. Physical holds must
+    // survive the intro, audio preparation and an attempt restart as well.
+    const held = window.GDHeldJumpKeys;
+    const key = (code, phaserKey) => held?.has(code) || phaserKey?.isDown;
+    const pointer = this.input.activePointer;
+    const overUI = pointer.isDown && this._startPosGui.visible && this.input.manager.hitTest(pointer, this._startPosGui.list, this.cameras.main).length;
+    const mouse = pointer.isDown && !overUI;
+    const two = this._isTwoPlayerMode();
+    const first = key('Space',this._spaceKey) || key('KeyW',this._wKey) || (!two && (key('ArrowUp',this._upKey) || key('KeyL',this._lKey)));
+    const second = two && (key('ArrowUp',this._upKey) || key('KeyL',this._lKey));
+    if ((first || (mouse && (!two || pointer.button !== 2))) && !this._logicButtonDown) this._pushButton();
+    if ((second || (mouse && two && pointer.button === 2)) && !this._logicButtonDown2) this._pushSecondPlayerButton();
+  }
+  _bindSongDownloadProgress(objects, arrowX, arrowY, width) {
+    if (!window.GDDownloads) return;
+    const x = arrowX - 55 - width;
+    const bar = this.add.graphics().setScrollFactor(0).setDepth(505);
+    const label = this.add.bitmapText(x + width / 2, arrowY - 14, 'bigFont', '', 22).setOrigin(.5).setScrollFactor(0).setDepth(505);
+    const detail = this.add.bitmapText(x + width / 2, arrowY + 27, 'goldFont', '', 18).setOrigin(.5).setScrollFactor(0).setDepth(505);
+    objects.push(bar, label, detail);
+    let previous = '';
+    const unsubscribe = window.GDDownloads.subscribe(state => {
+      const key = `${state.text}:${state.detail}:${state.fraction}:${state.active}`;
+      if (key === previous || !bar.scene) return;
+      previous = key;
+      const visible = state.rows.length > 0;
+      label.setVisible(visible).setText(state.text);detail.setVisible(visible).setText(state.detail);
+      bar.clear();if (!visible) return;
+      bar.fillStyle(0x000000, .8).fillRoundedRect(x, arrowY + 2, width, 14, 6);
+      bar.lineStyle(2, 0xaaaaaa).strokeRoundedRect(x, arrowY + 2, width, 14, 6);
+      const fill = Math.max(0, Math.min(1, state.fraction)) * (width - 6);
+      if (fill > 0) bar.fillStyle(state.failed ? 0xff5533 : 0x64ff22).fillRoundedRect(x + 3, arrowY + 5, fill, 8, 3);
+    });
+    bar.once('destroy', unsubscribe);
+  }
+  _queueJumpEvent(down,stamp=performance.now(),player=1,source='button') {
     if(this._paused||this._menuActive||this._slideIn||this._state.isDead||window.eclipseMenuOpen)return;
     const time=Number.isFinite(stamp)?stamp:performance.now(),queue=this._jumpEventQueue ||= [];
-    if(this._jumpEventHeld?.[player]===down)return;
-    (this._jumpEventHeld ||= {})[player]=down;
+    // GD delivers each physical button edge in order. A new mouse press
+    // must still override a held keyboard button (and vice versa).
+    const key = `${player}:${source}`;
+    if(this._jumpEventHeld?.[key]===down)return;
+    (this._jumpEventHeld ||= {})[key]=down;
     queue.push({down,time,player});
   }
   _drainJumpEvents(time) {
@@ -7150,12 +7210,12 @@ _showwippopup() {
       else e.down?this._pushButton():this._releaseButton();
     }
   }
-  _pushButton(ignoreMacro = false) {
-    const objectsUnderPointer = this.input.manager.hitTest(
+  _pushButton(ignoreMacro = false, onlyPlayer = 0) {
+    const objectsUnderPointer = this._startPosGui.visible && this.input.activePointer.isDown ? this.input.manager.hitTest(
       this.input.activePointer, 
       this._startPosGui.list,
       this.cameras.main
-    );
+    ) : [];
     const isOverUI = this._startPosGui.visible && objectsUnderPointer.length > 0;
     const fromClick = this.input.activePointer.isDown;
     const cancelInput = isOverUI && fromClick;
@@ -7172,16 +7232,20 @@ _showwippopup() {
       // Touch triggers listen to the button; Options can disable the player.
       const logic = this._level?.logicState;
       if (!this._logicButtonDown) { this._logicButtonDown = true; logic?.button(true, 1); }
-      if (logic?.controlsDisabled(1) && (this._isTwoPlayerMode() || !this._isDual || logic.controlsDisabled(2))) return;
+      const primaryEnabled = onlyPlayer !== 2 && !logic?.controlsDisabled(1);
+      const secondaryEnabled = onlyPlayer !== 1 && this._isDual && !this._state2.isDead && !this._isTwoPlayerMode() && !logic?.controlsDisabled(2);
+      if (!primaryEnabled && !secondaryEnabled) return;
       if(window.jumpHack){this._state.onGround=this._state.canJump=true;if(this._isDual)this._state2.onGround=this._state2.canJump=true;}
       this._pressUnseen = true;
       this._releaseDeferred = false;
-      this._state._holdDead = false;
-      this._state.upKeyDown = true;
-      this._state.upKeyPressed = true;
-      this._state.queuedHold = true;
-      this._state._orbActivationConsumedForPress = false;
-      if (this._isDual && !this._state2.isDead && !this._isTwoPlayerMode()) {
+      if (primaryEnabled) {
+        this._state._holdDead = false;
+        this._state.upKeyDown = true;
+        this._state.upKeyPressed = true;
+        this._state.queuedHold = true;
+        this._state._orbActivationConsumedForPress = false;
+      }
+      if (secondaryEnabled) {
         this._state2._holdDead = false;
         this._state2.upKeyDown = true;
         this._state2.upKeyPressed = true;
@@ -7192,7 +7256,7 @@ _showwippopup() {
       const restoreInputFrame = !this._localPhysicsActive ? this._level?.gameplayState?.enterPhysics() : null;
       try {
         const _dualImmediateBeforeGravity = !!this._state.gravityFlipped;
-        if (!this._state.isFlying && !this._state.isWave && !this._state.isUfo && this._state.canJump && !this._player._pressGoesToTouchedRings()) {
+        if (primaryEnabled && !this._state.isFlying && !this._state.isWave && !this._state.isUfo && this._state.canJump && !this._player._pressGoesToTouchedRings()) {
           // pushButton's immediate updateJump(0) skips ship, UFO, wave and
           // swing (Steam 4f62e3..4f6319); their press acts on the next tick.
           this._player.updateJump(0);
@@ -7206,7 +7270,7 @@ _showwippopup() {
             skipSpiderInputGravity: this._state.isSpider && _primaryImmediateJumped
           });
         }
-        if (this._isDual && !this._state2.isDead && !this._isTwoPlayerMode()) {
+        if (secondaryEnabled) {
           if (this._shouldSuppressDualGravityAction(this._state2, _primaryImmediateGravitySynced)) {
             this._state2.upKeyPressed = false;
             this._state2.queuedHold = false;
@@ -7234,6 +7298,21 @@ _showwippopup() {
       }
     }
 
+  }
+  _setPlayerControlsDisabled(index, disabled) {
+    const state = index === 2 ? this._state2 : this._state;
+    if (!state) return;
+    // PlayerObject::disablePlayerControls clears the live button but keeps
+    // the physical hold map. enablePlayerControls pushes that held button
+    // again (Steam 4fd790 / 4fd940), including presses made while disabled.
+    if (disabled) {
+      state.upKeyDown = state.upKeyPressed = state.queuedHold = false;
+      state._orbActivationConsumedForPress = false;
+    } else if (index === 2 && this._isTwoPlayerMode()) {
+      if (this._logicButtonDown2) this._pushSecondPlayerButton();
+    } else if (this._logicButtonDown) {
+      this._pushButton(false, index);
+    }
   }
   _releaseButton(ignoreMacro = false) {
     // A press no physics step has seen yet keeps the button down for one
@@ -8390,7 +8469,10 @@ _showwippopup() {
     }
   }
   _resetGameplayState() {
+    this._pauseResumeTimer?.remove();this._pauseResumeTimer=null;
+    this._pressUnseen=false;this._releaseDeferred=false;this._logicButtonDown=false;
     this._jumpEventQueue=[];this._jumpEventHeld={};
+    this._attemptInputPending = true;
     this._frameStepBudget=0;this._frameStepHoldTicks=0;
     this._dualBandY = this._lastBandY = null;
     this._cameraFloorX = this._startPosIndex >= 0 ? -Infinity : 30;
@@ -8446,6 +8528,7 @@ _showwippopup() {
     }
     this._resetGameplayState();
     this._state.reset();
+    this._state.canJump = false;
     this._player.reset();
     this._isDual = false;
     this._state2.reset();
@@ -8598,7 +8681,11 @@ _showwippopup() {
     // square on the spawn is switched off by a toggle at X -1785).
     this._meetStartTriggers(this._playerWorldX - 1e-6, true);
 
-    if (activeStartPos) { this._level.settleStartGround();this._level.cameraState?.settleStart(); }
+    if (activeStartPos) {
+      this._level.settleStartGround();
+      if (selectedStart.raw?.kA35 === '1') this._level.cameraState?.resetStartCamera();
+      this._level.cameraState?.settleStart();
+    }
 
     this._practiceBypassPending = false;
     this._audio.reset();
@@ -9328,7 +9415,7 @@ _showwippopup() {
       }
       this._percentageLabel.setText(displayValue);
       this._percentageLabel.setVisible(window.showPercentage && !window.eclipseHideLabels && !this._menuActive);
-      this._startPosGui.setVisible(window.startPosSwitcher && !this._menuActive);
+      this._startPosGui.setVisible(!!window.startPosSwitcher && this._level._startPositions.length > 0 && !this._menuActive && !this._levelWon);
       this._noclipIndicator.setVisible(window.noClip && !window.eclipseHideLabels && !this._menuActive);
       this._accuracyIndicator.setVisible(window.noClip && window.noClipAccuracy && !window.eclipseHideLabels && !this._menuActive);
       this._deathsIndicator.setVisible(window.noClip && (window.noClipDeaths ?? window.noClipAccuracy) && !window.eclipseHideLabels && !this._menuActive);
@@ -9360,11 +9447,15 @@ _showwippopup() {
       }
     }
     if (this._paused) {
-      if (!this._updateLogPopup && (this._spaceKey.isDown || this._upKey.isDown || this._wKey.isDown || this._lKey.isDown) && !this._spaceWasDown && !this._settingsPopup) {
-        setTimeout(() => {
-          this._resumeGame();
-        }, 75);
+      const held = this._jumpKeysDown();
+      if (!this._updateLogPopup && held && !this._pauseJumpWasDown && !this._settingsPopup && !this._pauseResumeTimer) {
+        const overlay = this._pauseContainer;
+        this._pauseResumeTimer = this.time.delayedCall(75, () => {
+          this._pauseResumeTimer = null;
+          if (this._paused && this._pauseContainer === overlay) this._resumeGame();
+        });
       }
+      this._pauseJumpWasDown = held;
       this._deltaBuffer = 0;
       return;
     }
@@ -9471,12 +9562,14 @@ _showwippopup() {
       }
       return;
     }
-    this._applyJumpInput = () => {
+    this._restoreAttemptInput();
+    this._applyJumpInput ||= () => {
       if(window.clickBetweenFrames||window.autoClicker)return;
       if(this._isTwoPlayerMode()) {
-        for(const [id,keys] of [[1,[this._spaceKey,this._wKey]],[2,[this._upKey,this._lKey]]]) {
-          const previous=id===1?'_spaceWasDown':'_secondWasDown',held=keys.some(k=>k.isDown);
-          const tapped=keys.some(k=>Phaser.Input.Keyboard.JustDown(k));
+        for(let id=1;id<=2;id++) {
+          const first=id===1?this._spaceKey:this._upKey,second=id===1?this._wKey:this._lKey;
+          const previous=id===1?'_spaceWasDown':'_secondWasDown',held=first.isDown||second.isDown;
+          const tapped=Phaser.Input.Keyboard.JustDown(first)||Phaser.Input.Keyboard.JustDown(second);
           if(!this._updateLogPopup&&((held&&!this[previous])||tapped)) {
             id===1?this._pushButton():this._pushSecondPlayerButton();
             if(!held)id===1?this._releaseButton():this._releaseSecondPlayerButton();
@@ -9488,8 +9581,8 @@ _showwippopup() {
       const jumpHeld = this._spaceKey.isDown || this._upKey.isDown || this._wKey.isDown || this._lKey.isDown;
       // A key tapped and let go between two polls still reaches the step,
       // as GD's button queue delivers both the press and the release.
-      const jumpKeys = [this._spaceKey, this._upKey, this._wKey, this._lKey];
-      const tapped = jumpKeys.some(key => key && Phaser.Input.Keyboard.JustDown(key));
+      const tapped = Phaser.Input.Keyboard.JustDown(this._spaceKey) || Phaser.Input.Keyboard.JustDown(this._upKey) ||
+        Phaser.Input.Keyboard.JustDown(this._wKey) || Phaser.Input.Keyboard.JustDown(this._lKey);
       if (!this._updateLogPopup && jumpHeld && (!this._spaceWasDown || tapped)) {
         this._pushButton();
       } else if (!this._updateLogPopup && tapped && !jumpHeld && !this._spaceWasDown) {
@@ -9501,11 +9594,11 @@ _showwippopup() {
       this._spaceWasDown = jumpHeld;
     };
 
-    const objectsUnderPointer = this.input.manager.hitTest(
+    const objectsUnderPointer = this._startPosGui.visible && this.input.activePointer.isDown ? this.input.manager.hitTest(
       this.input.activePointer,
       this._startPosGui.list,
       this.cameras.main
-    );
+    ) : [];
     const isOverUI = this._startPosGui.visible && objectsUnderPointer.length > 0;
     const fromClick = this.input.activePointer.isDown && (!this._isTwoPlayerMode() || this.input.activePointer.button!==2);
     const cancelInput = isOverUI && fromClick;
