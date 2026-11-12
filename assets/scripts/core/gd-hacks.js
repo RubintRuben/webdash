@@ -4,6 +4,7 @@
   'use strict';
   const scene = () => window.scene?.get('GameScene');
   const heldJumpKeys = window.GDHeldJumpKeys = new Set();
+  const jumpKeyProperties = {Space:'_spaceKey',ArrowUp:'_upKey',KeyW:'_wKey',KeyL:'_lKey'};
   window.addEventListener('blur', () => heldJumpKeys.clear());
   const state = { scale: 1, accent: '#ab2cb7', labels: true, decimals: 2, animate: true, animationTime: .3,
     positions: {}, keys: { Noclip: 'Digit1' }, keyTargets:{}, values: {},
@@ -395,7 +396,7 @@
     if(scene()?._searchHtmlInput?.focused&&!window.eclipseMenuOpen)return;
     if (window.GDIsTextInput(e.target) && !window.eclipseMenuOpen) { e.stopImmediatePropagation(); return; }
     if(e.code===state.keys['Step Key'])window._frameStepHeld=false;
-    if(window.clickBetweenFrames&&['Space','ArrowUp','KeyW','KeyL'].includes(e.code)&&!window.eclipseMenuOpen){const s=scene();if(s&&!s._menuActive&&!s._paused&&!s._slideIn){e.preventDefault();e.stopImmediatePropagation();s._queueJumpEvent(false,e.timeStamp,s._isTwoPlayerMode()&&['ArrowUp','KeyL'].includes(e.code)?2:1,'key:'+e.code);return;}}
+    if(window.clickBetweenFrames&&jumpKeyProperties[e.code]&&!window.eclipseMenuOpen){const s=scene();if(s&&!s._menuActive&&!s._paused&&!s._slideIn){e.preventDefault();e.stopImmediatePropagation();s[jumpKeyProperties[e.code]]?.reset();s._queueJumpEvent(false,e.timeStamp,s._isTwoPlayerMode()&&['ArrowUp','KeyL'].includes(e.code)?2:1,'key:'+e.code);return;}}
     if ((window.eclipseMenuOpen&&!root.contains(e.target)) || e.code === 'Tab') e.stopImmediatePropagation();
   }, true);
   window.addEventListener('resize', dimensions);

@@ -963,47 +963,96 @@ function getSpeedPortalValueForId(id) {
   return speedMap[parseInt(id ?? 0, 10)] ?? null;
 }
 
-function calculateSongOffsetForX(targetX, startSpeedKey = 0, sourceObjects = null) {
-  const targetWorldX = Math.max(0, Number(targetX) || 0);
-  const objects = Array.isArray(sourceObjects) ? sourceObjects : [];
-  const speedEvents = [];
-
-  for (const obj of objects) {
-    if (!obj) continue;
-    const speedPixelsPerSecond = getSpeedPixelsPerSecondForPortalId(obj.id);
-    if (speedPixelsPerSecond === null) continue;
-
-    const raw = obj._raw || {};
-    const rawX = Number(raw[2] ?? raw["2"] ?? obj.x ?? 0);
-    if (!Number.isFinite(rawX)) continue;
-
-    const worldX = rawX * 2;
-    if (worldX < 0 || worldX > targetWorldX) continue;
-    speedEvents.push({ x: worldX, speedPixelsPerSecond });
+// LevelTools' route is shared by music seeking and Start Pos effect loading.
+// It follows trigger channels and the travel axis, including reverse, warp and
+// teleport events. It never runs player collision or invents player input.
+class GDLevelTimeline {
+  constructor(objects, startSpeedKey = 0) {
+    this.segments = [];
+    const speedKeys = {200:1,201:0,202:2,203:3,1334:4};
+    const speeds = [311.5801086425781,251.1600799560547,387.4201354980469,468.0001525878906,576.0001831054688];
+    const directions = {1:[0,1],2:[0,-1],3:[-1,0],4:[1,0]};
+    const channels = new Map(), groups = new Map();
+    for (const obj of objects) {
+      for (const g of String(obj?.groups || '').split('.')) if (+g > 0 && !groups.has(+g)) groups.set(+g,obj);
+      if (!obj || !([1917,1935,2900,2902].includes(obj.id) || obj.id in speedKeys)) continue;
+      const r = obj._raw || {};
+      if (r[62] === '1' || r[11] === '1' && [1917,1935,2900].includes(obj.id)) continue;
+      const channel = +r[170] || 0;
+      if (!channels.has(channel)) channels.set(channel,[]);
+      channels.get(channel).push({obj, order:+r[115] || 0, used:false});
+    }
+    let x=0,y=0,u=[1,0],channel=0,speed=speeds[startSpeedKey] || speeds[0],warp=1,time=0,order=0;
+    const position = (obj) => {
+      const def=window.GD_OBJECTS?.[obj.id], sx=(obj.scale || 1)*(obj.scaleX || 1),sy=(obj.scale || 1)*(obj.scaleY || 1);
+      const angle=-(obj.rot || 0)*Math.PI/180,c=Math.cos(angle),s=Math.sin(angle);
+      let px=obj.x,py=obj.y+90;
+      if (obj.id in speedKeys || obj.id===2902) {
+        const ox=(def?.bo?.[0] || 0)*sx*(obj.flipX?-1:1),oy=(def?.bo?.[1] || 0)*sy*(obj.flipY?-1:1);
+        px+=ox*c-oy*s;py+=ox*s+oy*c;
+        const halfX=(Math.abs(c*(def?.w || 0)*sx)+Math.abs(s*(def?.h || 0)*sy))/2+15;
+        const halfY=(Math.abs(s*(def?.w || 0)*sx)+Math.abs(c*(def?.h || 0)*sy))/2+15;
+        px-=u[0]*halfX;py-=u[1]*halfY;
+      }
+      return [Math.max(0,px),Math.max(0,py)];
+    };
+    // Each authored event is consumed once, including channels re-entered later.
+    const count=[...channels.values()].reduce((n,list)=>n+list.length,0);
+    for(let i=0;i<=count;i++) {
+      let next=null,point=null,progress=Infinity;
+      for(const candidate of channels.get(channel) || []) {
+        if(candidate.used) continue;
+        const p=position(candidate.obj), d=(p[0]-x)*u[0]+(p[1]-y)*u[1];
+        if(!next || candidate.order<next.order || candidate.order===next.order && d<progress) {next=candidate;point=p;progress=d;}
+      }
+      const distance=next?Math.max(0,progress):Infinity,velocity=speed*warp;
+      const duration=distance/velocity;
+      this.segments.push({time,end:time+duration,x,y,ux:u[0],uy:u[1],channel,order,speed:velocity,warp,event:next?.obj || null});
+      if(!next) break;
+      time+=duration;
+      const oldU=u;
+      // A turn writes both coordinates; other events only advance travel.
+      x+=u[0]*distance;y+=u[1]*distance;
+      next.used=true;order=next.order;
+      const obj=next.obj,r=obj._raw || {};
+      if(obj.id in speedKeys) speed=speeds[speedKeys[obj.id]];
+      else if(obj.id===1917) u=[-u[0],-u[1]];
+      else if(obj.id===1935) warp=Math.max(.01,+r[120] || 1);
+      else if(obj.id===2900) {
+        if(r[172]!=='1') {
+          const type=_gdSlopeType(!!obj.flipX,!!obj.flipY,obj.rot || 0);
+          const defaults=[4,4,3,3,2,1,1,2];
+          u=directions[+r[167]] || directions[defaults[type ?? 0]];
+        }
+        if(Math.abs(oldU[1])!==Math.abs(u[1])) {x=point[0];y=point[1];}
+        if(r[171]==='1') {channel=+r[173] || 0;order=0;}
+      } else if(obj.id===2902) {
+        const target=groups.get(+r[51]);
+        if(target) {
+          if(r[352]!=='1') x+=target.x-point[0];
+          if(r[353]!=='1') y+=target.y+90-point[1];
+        }
+      }
+    }
   }
-
-  speedEvents.sort((a, b) => a.x - b.x);
-
-  let currentX = 0;
-  let currentPixelsPerSecond = getSpeedPixelsPerSecondFromKey(startSpeedKey);
-  let offsetSeconds = 0;
-
-  const addSegment = (nextX) => {
-    const dx = Math.max(0, nextX - currentX);
-    offsetSeconds += dx / Math.max(0.000001, currentPixelsPerSecond);
-    currentX = nextX;
-  };
-
-  for (const event of speedEvents) {
-    const nextX = Math.max(0, Math.min(targetWorldX, event.x));
-    addSegment(nextX);
-    currentPixelsPerSecond = event.speedPixelsPerSecond;
+  timeForPosition(worldX,worldY=0,channel=0,order=0) {
+    const x=worldX/2,y=worldY/2+90;
+    for(const s of this.segments) {
+      if(s.channel!==channel || s.order<order) continue;
+      const distance=(x-s.x)*s.ux+(y-s.y)*s.uy;
+      if(distance>=-1e-6 && s.time+distance/s.speed<=s.end+1e-6) return Math.max(0,s.time+distance/s.speed);
+    }
+    return 0;
   }
-
-  addSegment(targetWorldX);
-  return Math.max(0, offsetSeconds);
+  positionAt(time) {
+    const s=this.segments.find(s=>time<s.end-1e-9) || this.segments[this.segments.length-1];
+    const distance=Math.max(0,time-s.time)*s.speed;
+    return {x:(s.x+s.ux*distance)*2,y:(s.y+s.uy*distance-90)*2,channel:s.channel,ux:s.ux,uy:s.uy,warp:s.warp};
+  }
 }
-
+function calculateSongOffsetForX(targetX, startSpeedKey = 0, sourceObjects = null) {
+  return new GDLevelTimeline(Array.isArray(sourceObjects)?sourceObjects:[],startSpeedKey).timeForPosition(Math.max(0,+targetX || 0));
+}
 window.calculateGeometryDashSongOffsetForX = calculateSongOffsetForX;
 
 const objsWithGlow = [1, 2, 3, 4, 6, 7, 83, 84, 1332, 67, 8, 39, 103, 392, 35, 36, 40, 140, 141, 62, 65, 66, 68, 195, 196, 1022, 1594];
@@ -1355,15 +1404,14 @@ window.LevelObject = class LevelObject {
     }
   }
 
+  getStartTimeline() {
+    return this._startTimeline ||= new GDLevelTimeline(this._sourceLevelObjects || [],+this._baseSettingsMap?.kA4 || 0);
+  }
   getSongOffsetForX(targetX, options = {}) {
-      const sourceObjects = Array.isArray(options.sourceObjects)
-        ? options.sourceObjects
-        : (Array.isArray(window.levelObjects) ? window.levelObjects : (this._sourceLevelObjects || []));
-      // Start Position temporarily overwrites settingsMap.kA4 with its local
-      // speed. Song time before that point still uses the level's initial
-      // speed; otherwise switching to a faster startpos seeks too early.
-      const startSpeedKey = options.startSpeedKey ?? this._baseSettingsMap?.["kA4"] ?? window.settingsMap?.["kA4"] ?? 0;
-      return calculateSongOffsetForX(targetX, startSpeedKey, sourceObjects);
+    const timeline=options.sourceObjects || options.startSpeedKey!==undefined
+      ? new GDLevelTimeline(options.sourceObjects || this._sourceLevelObjects || [],options.startSpeedKey ?? this._baseSettingsMap?.kA4 ?? 0)
+      : this.getStartTimeline();
+    return timeline.timeForPosition(targetX,options.y || 0,options.channel || 0,options.order || 0);
   }
 
   _isTriggerSpawnTriggered(levelObj) {
@@ -1649,6 +1697,8 @@ window.LevelObject = class LevelObject {
     this._userCoinCompleted = window.isEditor ? new Set() : this._loadUserCoinProgress();
     this._userCoinSlotCount = 0;
     this._sourceLevelObjects = levelObjects;
+    this._startTimeline = null;
+    this._collisionQuery = null;
     // Objects are built before _setUpSettings. Read their font from this
     // level's header, otherwise a level change inherits the previous font.
     this._fontIndex = Number(settingslist.match(/(?:^|,)kA18,([^,]*)/)?.[1]) || 0;
@@ -5256,6 +5306,7 @@ window.LevelObject = class LevelObject {
   }
   _removeCollisionFromSections(collider) {
     if (!collider) return;
+    this._collisionQueryVersion=(this._collisionQueryVersion || 0)+1;
     const known = Array.isArray(collider._eeCollisionSectionIndices)
       ? collider._eeCollisionSectionIndices
       : (Number.isInteger(collider._eeCollisionSectionIndex) ? [collider._eeCollisionSectionIndex] : []);
@@ -5272,6 +5323,7 @@ window.LevelObject = class LevelObject {
     // No Touch is a static placed-object flag. Keep its transform for group
     // actions, but do not put decorative geometry into gameplay queries.
     if (!collider || collider._eeUIObject || collider.noTouch) return;
+    this._collisionQueryVersion=(this._collisionQueryVersion || 0)+1;
     const indices = this._getCollisionSectionIndices(collider);
     for (const index of indices) {
       this._collisionSections[index] ||= [];
@@ -5286,6 +5338,9 @@ window.LevelObject = class LevelObject {
   }
   _refreshCollisionSection(collider) {
     if (!collider || collider._eeUIObject || collider.noTouch) return;
+    // Without Y rows, candidates are object references and remain valid
+    // while those objects move inside their existing X sections.
+    if(this._collisionRowsEnabled) this._collisionQueryVersion=(this._collisionQueryVersion || 0)+1;
     // Fast path: an ordinary collider stays in its single section.
     if (!collider.extendedCollision) {
       const known = collider._eeCollisionSectionIndices;
@@ -5443,8 +5498,6 @@ window.LevelObject = class LevelObject {
     const _0x31c345 = Math.max(0, _0x55d1b7 - 1);
     const _0x5f1907 = Math.min(this._collisionSections.length - 1, _0x55d1b7 + 1);
     const _0x28a7c0 = this._nearbyBuffer;
-    _0x28a7c0.length = 0;
-    const seen = new Set();
     // checkCollisions (31b530..31b799) visits X cells, then Y cells,
     // then each cell's creation-ID-sorted objects. Native Y includes the
     // 90-point base-ground offset that saved/web coordinates omit.
@@ -5455,6 +5508,11 @@ window.LevelObject = class LevelObject {
     const row = useRows ? gdPlayerCollisionCell(worldY + 180) : 0;
     const firstRow = useRows ? Math.max(0, row - 1) : 0;
     const lastRow = useRows ? row + 1 : 0;
+    const version=this._collisionQueryVersion || 0,cache=this._collisionQuery;
+    if(cache && cache.version===version && cache.cell===_0x55d1b7 && cache.row===row && cache.useRows===useRows) return _0x28a7c0;
+    this._collisionQuery={version,cell:_0x55d1b7,row,useRows};
+    _0x28a7c0.length=0;
+    const seen=new Set();
     for (let _0xe2cbfa = _0x31c345; _0xe2cbfa <= _0x5f1907; _0xe2cbfa++) {
       const _0x2171db = this._collisionSections[_0xe2cbfa];
       if (_0x2171db) {
@@ -7707,6 +7765,7 @@ window.LevelObject = class LevelObject {
   _setRodframe(attemptNumber = 1) {
     const frames = ["rod_ball_01_001.png", "rod_ball_02_001.png", "rod_ball_03_001.png"];
     const frameName = frames[Math.floor(Math.random() * frames.length)];
+    this.gdRenderer?.setRodFrame(frameName);
 
     for (const spriteList of this.objectSprites || []) {
       if (!Array.isArray(spriteList)) continue;

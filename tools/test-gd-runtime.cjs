@@ -2465,14 +2465,14 @@ test('gradient face order follows activation rather than trigger section order a
   const l=fixture(['1,2903,2,1,3,100,202,10,209,1', '1,2903,2,2,3,-100,202,10,209,2']);
   const r=l.gdRenderer;r.colorManager=scene._colorManager;r.finalize();r.setCamera(0,0);
   const [outer,inner]=l._gradientTriggers;
-  assert.ok(l.gdObjects[inner.uid].arrival<l.gdObjects[outer.uid].arrival);
-  l.gradientState.trigger(outer);l.gradientState.trigger(inner);r.update(0);
-  assert.ok(l.gradientState.items.get(1).sortKey<l.gradientState.items.get(2).sortKey);
+  assert.ok(l.gdObjects[outer.uid].arrival<l.gdObjects[inner.uid].arrival);
+  l.gradientState.trigger(inner);l.gradientState.trigger(outer);r.update(0);
+  assert.ok(l.gradientState.items.get(2).sortKey<l.gradientState.items.get(1).sortKey);
   const saved=l.gradientState.capture();
   l.gradientState.trigger({raw:{209:'1',208:'1'}});l.gradientState.trigger(outer);r.update(0);
-  assert.ok(l.gradientState.items.get(1).sortKey<l.gradientState.items.get(2).sortKey);
+  assert.ok(l.gradientState.items.get(2).sortKey<l.gradientState.items.get(1).sortKey);
   l.gradientState.reset();l.gradientState.restore(saved);r.update(0);
-  assert.ok(l.gradientState.items.get(1).sortKey<l.gradientState.items.get(2).sortKey);
+  assert.ok(l.gradientState.items.get(2).sortKey<l.gradientState.items.get(1).sortKey);
 });
 
 test('counter glyphs loaded after finalization use the level font and stay live', () => {
@@ -4185,5 +4185,60 @@ test('a reversing dual player does not reverse its partner when Reverse Sync is 
   scene._player=primary;scene._player2=secondary;secondary._scene=scene;
   vm.runInContext('PlayerObject.prototype.reversePlayer',context).call(secondary);assert.equal(secondary.p.isGoingLeft,true);assert.equal(primary.p.isGoingLeft,false);
  }finally{context.settingsMap=old.state;scene._player=old.p1;scene._player2=old.p2;scene._isDual=old.dual;}
+});
+test('native decoration batches retain creation order across Y sections',()=>{
+ const r=new context.GDRenderer(scene);r.frames.get=()=>({slot:0,w:30,h:30,cw:30,ch:30,ox:0,oy:0});
+ const ys=[215,5,115,15,105];ys.forEach(y=>r.addObject(parseObject(`1,1,2,150,3,${y}`)));r.finalize();
+ assert.deepEqual(Array.from(r._byRank,o=>o.y),ys);
+});
+test('the two-piece slope art uses native clipped vertices instead of full rectangles',()=>{
+ const reference=JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures/gd-native-slope-pairs.json'),'utf8'));
+ for(const sample of reference.samples){
+  const r=new context.GDRenderer(scene);r.frames.get=name=>({slot:0,w:name==='blockOutline_15_001.png'?60:30,h:30,cw:name==='blockOutline_15_001.png'?60:30,ch:30,ox:0,oy:0});
+  const obj=r.addObject(parseObject(`1,${sample.id},2,${sample.position[0]},3,${sample.position[1]-90}`));
+  for(let i=0;i<2;i++) {
+   const part=obj.parts[i],m=part.matrix,expected=sample.children[i];
+   assert.deepEqual(Array.from(part.vertexMods),expected.mods);
+   // Native CCSprite quad order is TL, BL, TR, BR.
+   for(let k=0;k<4;k++){
+    const right=k>=2,top=k%2===0,x=right?30:0,y=top?30-30*part.vertexMods[right?1:0]:0;
+    const v=expected.vertices[k];near(obj.x+m[0]*x+m[2]*y+m[4],v[0],.001);
+    near(obj.y+90+m[1]*x+m[3]*y+m[5],v[1],.001);
+   }
+  }
+ }
+});
+test('Dash seeking follows native turns, speed contacts, timewarp and teleport channels',()=>{
+ const Timeline=vm.runInContext('GDLevelTimeline',context),data=fs.readFileSync(path.join(root,'assets/levels/22.txt'),'utf8');
+ const parsed=parseLevel(data),timeline=new Timeline(parsed.objects,0);
+ const native=JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures/gd-native-dash-timeline.json'),'utf8'));
+ for(const row of native.samples){const p=timeline.positionAt(row.t);near(p.x/2,row.x,.004);near(p.y/2+90,row.y,.004);}
+ near(timeline.timeForPosition(16425*2,585*2,0,0),63.064035,.0001);
+ assert.ok(timeline.timeForPosition(18945*2,615*2)>68);
+});
+test('native rod helpers sit above all three stems and inherit their groups and pulse flag',()=>{
+ const r=new context.GDRenderer(scene);r.frames.get=()=>({slot:0,w:30,h:30,cw:30,ch:30,ox:0,oy:0});
+ for(const id of [15,16,17])r.addObject(parseObject(`1,${id},2,150,3,15,57,8`));
+ const balls=r.objects.filter(o=>o._rodBall);assert.equal(balls.length,3);
+ for(let i=0;i<3;i++) {const ball=balls[i];near(ball.x,150);near(ball.y,[46,38.25,31.25][i]);assert.equal(ball.baseID,1005);assert.deepEqual(Array.from(ball.groups),[8]);assert.ok(ball.def.fl & 2048);}
+ r.setRodFrame('rod_ball_02_001.png');assert.ok(balls.every(o=>o.parts.length===1));
+});
+test('collision query reuse preserves ordering and invalidates on moves within an X cell',()=>{
+ const l=fixture(['1,1,2,100,3,10','1,1,2,100,3,250']);l._collisionRowsEnabled=true;
+ const first=Array.from(l.getNearbySectionObjects(200,20));assert.equal(first.length,1);
+ const cached=Array.from(l.getNearbySectionObjects(200,20));assert.deepEqual(cached,first);
+ const moved=l.objects[0];moved.y=500;l._refreshCollisionSection(moved);
+ assert.equal(l.getNearbySectionObjects(200,20).length,0);
+ assert.equal(l.getNearbySectionObjects(200,500).length,2);
+});
+test('ship and cube retain native sibling offsets through mini, gravity and turn angles',()=>{
+ const player={p:{isMini:false},_shipLayers:[{sprite:{}}],_playerLayers:[{sprite:{}}]};
+ for(const mini of [false,true])for(const flip of [false,true])for(const mirror of [1,-1])for(const angle of [0,.3,1.1,-.7]){
+  player.p.isMini=mini;context.testAPI.PlayerObject.prototype._syncShipArt.call(player,400,300,angle,mirror,flip);
+  const ship=player._shipLayers[0].sprite,cube=player._playerLayers[0].sprite;
+  near((ship.x+cube.x)/2,400);near((ship.y+cube.y)/2,300);
+  near(Math.hypot(ship.x-cube.x,ship.y-cube.y),mini?12:20);
+  near(ship.rotation,cube.rotation);near(Math.abs(cube.scaleX/ship.scaleX),.55);
+ }
 });
 console.log(passes + ' regression tests passed.');

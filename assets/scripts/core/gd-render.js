@@ -309,6 +309,8 @@
       return;
     }
     const pairs = {
+      1773: [[1, 0.5], [0.5, 0]], 1774: [[1, 0.5], [0.5, 0]],
+      1775: [[0, 0.5], [0.5, 1]], 1776: [[0, 0.5], [0.5, 1]],
       1785: [[0.9, 0.45], [0.45, 0]], 1786: [[1, 0.5], [0.6, 0.1]],
       1787: [[0.05, 0.5], [0.5, 0.9]], 1788: [[0, 0.4], [0.5, 1]],
       1789: [[1, 0.5], [0.5, 0]], 1790: [[1, 0.5], [0.5, 0]],
@@ -324,7 +326,7 @@
     const children = tree[14].filter(n => !(n[10] & 16));
     if (children.length !== 2) return;
     children.forEach((child, i) => { child.vertexMods = pair[i].map(Math.fround).concat(0, 0); });
-    if (id >= 1785 && id <= 1788) return;
+    if (id >= 1773 && id <= 1776 || id >= 1785 && id <= 1788) return;
     const colorRoot = structuredClone(tree);
     colorRoot[1] = frames.get(tree[0]).cw / 2;
     colorRoot[2] = frames.get(tree[0]).ch / 2;
@@ -948,6 +950,20 @@
     // order - 100, drawn from the GJ_GameSheet02 batch. The front itself is
     // moved to z order 12.
     _addCompanionObjects(levelObj, obj) {
+      // PlayLayer::addObject (50ccc7) creates an independent pulse ball at
+      // the top of every rod. It is absent from the constructor sprite tree.
+      if ([15,16,17].includes(obj.id)) {
+        const frame='rod_ball_01_001.png',rise={15:31,16:23.25,17:16.25}[obj.id];
+        const theta=-(obj.rot || 0)*Math.PI/180,dy=rise*obj.scaleY*(obj.flipY?-1:1);
+        const base=obj.baseID===1004?1005:obj.baseID;
+        const ballDef={f:frame,t:7,zl:obj.zLayer,zo:obj.zOrder,bc:base,dc:-1,pm:0,ct:0,
+          fl:GD_FLAGS.usesAudioScale,om:1,n:[frame,0,0,.5,.5,1,1,0,0,0,0,255,0xffffff,null,[]]};
+        const placed={...levelObj,x:obj.x-Math.sin(theta)*dy,y:obj.y+Math.cos(theta)*dy,
+          _raw:{...levelObj._raw,19:'0',21:'0',22:'0'}};
+        const ball=this.addObject(placed,ballDef);
+        if(ball) {ball._rodBall=true;ball._rodFrames=[];ball.companionOf=obj;}
+        return;
+      }
       const frame = obj.def.f || "";
       const m = /^portal_(\d+)_front_001\.png$/.exec(frame);
       if (!m) return;
@@ -969,19 +985,28 @@
       if (!(Number(levelObj.zOrder) > 0) && !(Number(levelObj.zOrder) < 0)) obj.zOrder = 12;
     }
 
+    setRodFrame(frame) {
+      const info=this.frames.get(frame);if(!info)return;
+      for(const obj of this.objects) if(obj._rodBall) {
+        let parts=obj._rodFrames[frame];
+        if(!parts) {
+          parts=[];const tree=[frame,0,0,.5,.5,1,1,0,0,0,0,255,0xffffff,null,[]];
+          compileTree(this.frames,tree,null,parts,{glow:false},0,false,false);
+          obj._rodFrames[frame]=parts;
+        }
+        obj.parts=parts;obj.radius=this._localRadius(parts);this._indexObject(obj);
+      }
+      this._ranksDirty=true;
+    }
+
     finalize() {
       this.positionUIObjects();
       for (const grid of this.grids) grid.clear();
       this.wideObjects.clear();
-      const size = this.sectionSize;
       for (const obj of this.objects) { obj._class = undefined; obj._cell = undefined; obj._wide = false; this._indexObject(obj); }
-      // CCSpriteBatchNode order of arrival: objects are activated section by
-      // section (x, then y), and within a section in level order.
-      const sorted = this.objects.slice().sort((a, b) =>
-        (Math.floor(a.x / size) - Math.floor(b.x / size)) ||
-        (Math.floor(a.y / size) - Math.floor(b.y / size)) ||
-        (a.index - b.index));
-      sorted.forEach((obj, rank) => { obj.arrival = rank; });
+      // Native CCSpriteBatchNode keeps creation order for equal Z. Spatial
+      // activation/collision sections do not replace it (also with Dynamic
+      // Level Height). Keep overlapping decoration stable within each batch.
       this._rankObjects();
     }
 

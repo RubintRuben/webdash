@@ -58,6 +58,11 @@ const out = path.resolve('work/qa-input-fidelity');fs.mkdirSync(out,{recursive:t
     assert.ok(await page.evaluate(()=>scene.get('GameScene')._state.y>40),'CBF must retain a physical hold through restart');
    }
    await page.keyboard.up('Space');
+   if(cbf){
+    const released=await page.evaluate(()=>{const s=scene.get('GameScene');s._drainJumpEvents(Infinity);s._restartLevel();s._waitingForLevelMusic=false;s._audio.pauseMusic();s._paused=false;
+     for(let i=0;i<4;i++)s.update(i*1000/240,1000/240);return{physical:[...GDHeldJumpKeys],phaser:s._spaceKey.isDown,logical:s._logicButtonDown,y:s._state.y};});
+    assert.deepEqual(released,{physical:[],phaser:false,logical:false,y:30});
+   }
   }
   assert.ok(heldStarts.every(x=>x.held&&x.y>40),JSON.stringify(heldStarts));
   await load('kA4,0;1,1,2,50000,3,15;');
@@ -109,15 +114,24 @@ const out = path.resolve('work/qa-input-fidelity');fs.mkdirSync(out,{recursive:t
   assert.equal(start.initial.x,1600);assert.equal(start.initial.y,600);assert.equal(start.initial.tweens,0);
   assert.ok(start.initial.lead<0);assert.ok(Math.abs(start.next.cam-start.initial.cam)<10,JSON.stringify(start));assert.equal(start.visible,true);
   console.log('PASS reverse Start Position settles its zoom, direction and camera before the first tick');
+  await load('kA4,0;1,1,2,300,3,100,57,7;1,901,2,60,3,90,51,7,28,100,10,1;1,1007,2,75,3,90,51,7,35,0.25,10,0.5;1,31,2,1200,3,100,kA2,1,kA35,1;1,1,2,50000,3,15;');
+  const settled=await page.evaluate(()=>{const s=scene.get('GameScene');s._startPosIndex=0;s._restartLevel();s._waitingForLevelMusic=false;s._audio.pauseMusic();s._paused=true;
+   const l=s._level;return{offset:l.gdObjects[0].offX,opacity:l._groupOpacity[7],moves:l._activeMoveTweens.length,seconds:s._startPosEffectTime,
+    player:[s._playerWorldX,s._state.y],container:[l.container.x,l.container.y],camera:[s._cameraX,s._cameraY],cube:s._player._playerSpriteLayer.sprite.visible};});
+  assert.ok(Math.abs(settled.offset-100)<.0001,JSON.stringify(settled));assert.equal(settled.opacity,.25);assert.equal(settled.moves,0);
+  assert.ok(settled.seconds>3);assert.deepEqual(settled.player,[2400,200]);assert.equal(settled.cube,true);
+  assert.deepEqual(settled.container,[-settled.camera[0],settled.camera[1]]);
+  console.log('PASS Start Position advances historical Move/Alpha actions and synchronizes its ship and camera before drawing');
   await load(fs.readFileSync(path.resolve(__dirname,'../assets/levels/22.txt'),'utf8'));
   const dashStarts=await page.evaluate(()=>{const s=scene.get('GameScene'),out=[];for(const index of [6,7,8,9,6,8,7]){
    s._startPosIndex=index;s._restartLevel();s._waitingForLevelMusic=false;s._audio.pauseMusic();s._paused=false;
    const c=s._level.cameraState,initial=c.view(1138,640,s._cameraX,s._cameraY);
    for(let i=0;i<4;i++)s.update(i*1000/240,1000/240);
-   out.push({index,x:s._level.getStartPositions()[index].x,initial,next:c.view(1138,640,s._cameraX,s._cameraY),targets:c.targets});}return out;});
+   out.push({index,x:s._level.getStartPositions()[index].x,initial,next:c.view(1138,640,s._cameraX,s._cameraY),targets:c.targets,effectTime:s._startPosEffectTime});}return out;});
   for(const start of dashStarts){assert.equal(start.targets.x,null);assert.equal(start.targets.y,null);
    assert.equal(start.initial.rotation,0);assert.ok(Math.abs(start.initial.x-start.x)<300,JSON.stringify(start));
    assert.ok(Math.abs(start.next.x-start.initial.x)<40,JSON.stringify(start));}
+  assert.ok(Math.abs(dashStarts[1].effectTime-63.064035)<.0001);
   assert.ok(dashStarts[1].initial.x>dashStarts[0].initial.x+2000);assert.ok(dashStarts[2].initial.x>dashStarts[1].initial.x+4000);
   console.log('PASS Dash Start Positions 7–10 clear saved camera locks and show distinct stable rooms in both switch directions');
   // Native Toggle + portal ordering: a portal exposed by this tick's touch

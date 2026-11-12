@@ -7161,7 +7161,9 @@ _showwippopup() {
     // CBF suppresses Phaser's key state while playing. Physical holds must
     // survive the intro, audio preparation and an attempt restart as well.
     const held = window.GDHeldJumpKeys;
-    const key = (code, phaserKey) => held?.has(code) || phaserKey?.isDown;
+    // Once physical tracking is available it is authoritative. A key pressed
+    // during the intro can remain down in Phaser when CBF captures its keyup.
+    const key = (code, phaserKey) => held ? held.has(code) : phaserKey?.isDown;
     const pointer = this.input.activePointer;
     const overUI = pointer.isDown && this._startPosGui.visible && this.input.manager.hitTest(pointer, this._startPosGui.list, this.cameras.main).length;
     const mouse = pointer.isDown && !overUI;
@@ -8468,6 +8470,58 @@ _showwippopup() {
       }else level.checkGameplayTriggers(x, this._state.y);
     }
   }
+  _loadStartPosEffects(pos) {
+    const l=this._level,timeline=l.getStartTimeline();
+    const seconds=Math.min(3600,timeline.timeForPosition(pos.x,pos.y,+pos.raw?.kA26 || 0,+pos.raw?.kA19 || 0));
+    const saved={x:this._playerWorldX,y:this._state.y,left:this._state.isGoingLeft,gravity:this._state.gravityFlipped,frame:this._physicsFrame};
+    const activate=(p)=>{
+      this._playerWorldX=p.x;this._state.y=p.y;
+      l._gameplayChannel=p.channel;l._channelDirections[p.channel]={x:p.ux,y:p.uy};
+      for(const c of l.checkColorTriggers(p.x)) this._colorManager.triggerColor(c.index,c.color,c.duration,c.colorOptions);
+      l.checkMoveTriggers(p.x);l.checkFollowTriggers(p.x);l.checkScaleTriggers(p.x);
+      l.checkCountTriggers(p.x);l.checkKeyframeTriggers(p.x);l.checkSpawnTriggers(p.x);l.checkLogicTriggers?.(p.x);
+      l.checkAnimationTriggers?.(p.x);l.checkRotateTriggers(p.x);l.checkAlphaTriggers(p.x);
+      l.checkToggleTriggers(p.x);l.checkStopTriggers(p.x,p.y);l.checkPulseTriggers(p.x);
+      l.checkShaderTriggers(p.x);l.checkCameraTriggers(p.x);l.checkAreaTriggers?.(p.x);l.checkEnterEffectTriggers(p.x);
+      // Position comes from LevelTools, rather than collision or Rotate Gameplay.
+      for(const ignored of l._orderedTriggers('_gameplayTriggers','_gameplayTriggerIdx',p.x,p.y)) {}
+    };
+    // Native loadStartPos evaluates effect-manager commands in 1/60-second
+    // steps. Splitting at route boundaries also consumes the departing channel.
+    let elapsed=0;
+    activate(timeline.positionAt(0));
+    for(const segment of timeline.segments) {
+      if(segment.time>seconds+1e-9) break;
+      const end=Math.min(seconds,segment.end);
+      while(elapsed<end-1e-9) {
+        const next=Math.min(end,elapsed+1/60),dt=next-elapsed;
+        this._physicsFrame++;
+        const distance=(next-segment.time)*segment.speed;
+        activate({x:(segment.x+segment.ux*distance)*2,y:(segment.y+segment.uy*distance-90)*2,channel:segment.channel,ux:segment.ux,uy:segment.uy});
+        l.stepScaleTriggers(dt);l.stepRotateTriggers(dt);l.stepMoveTriggers(dt,true);l.stepFollowTriggers(dt);
+        l.stepSpawnTriggers(dt,this._colorManager);l.logicState?.step(dt);l.stepAlphaTriggers(dt);
+        l.advFollowState?.step(dt);l.keyframeState?.step(dt);l.cameraState?.step(dt);
+        l.stepCameraLockMoves();l.areaState?.step(dt);l.shaderState?.step(dt);
+        l.stepPulseTriggers(dt,this._colorManager);this._colorManager.step(dt);
+        elapsed=next;
+      }
+      if(end>=seconds-1e-9) break;
+      activate(timeline.positionAt(elapsed+1e-8));
+    }
+    this._playerWorldX=saved.x;this._state.y=saved.y;this._state.isGoingLeft=saved.left;this._state.gravityFlipped=saved.gravity;
+    this._physicsFrame=saved.frame;
+    // loadStartPos clears motion accumulated by historical effect actions.
+    this._state.yVelocity=0;this._state.lastY=saved.y;this._state.lastGroundPosY=saved.y;
+    l._gameplayChannel=+pos.raw?.kA26 || 0;
+    const u=l.gameplayState.u,direction=saved.left?-1:1;
+    l._channelDirections[l._gameplayChannel]={x:u.x*direction,y:u.y*direction};
+    l.gdRenderer?.flushMoves();
+    l.applyColorChannels(this._colorManager,true);
+    this._bg.setTint(this._colorManager.getHex(fs));
+    l.setGroundColor(this._colorManager.getHex(gs));l.setGround2Color?.(this._colorManager.getHex(1009));
+    l.setLineColor?.(this._colorManager.getHex(1002),this._colorManager.getBlending(1002));
+    this._startPosEffectTime=seconds;
+  }
   _resetGameplayState() {
     this._pauseResumeTimer?.remove();this._pauseResumeTimer=null;
     this._pressUnseen=false;this._releaseDeferred=false;this._logicButtonDown=false;
@@ -8645,7 +8699,7 @@ _showwippopup() {
       if (pos.dualMode) {
         this._enableDualMode();
       }
-      this._level.fastForwardTriggers(pos.x, this._colorManager);
+      this._loadStartPosEffects(pos);
       this._cameraX=this._gdFollowCameraX(this._playerWorldX);
       this._updateCameraY(0,true);
       if (this._player) {
@@ -8679,7 +8733,7 @@ _showwippopup() {
     // Toggle triggers behind the spawn act before its first collision: GD
     // resolves them while the attempt starts (Troll Madness auto: a kill
     // square on the spawn is switched off by a toggle at X -1785).
-    this._meetStartTriggers(this._playerWorldX - 1e-6, true);
+    if (!activeStartPos) this._meetStartTriggers(this._playerWorldX - 1e-6, true);
 
     if (activeStartPos) {
       this._level.settleStartGround();
@@ -8727,6 +8781,8 @@ _showwippopup() {
       this._cameraX = this._gdFollowCameraX(this._playerWorldX);
       this._cameraXRef._v = this._cameraX;
       this._prevCameraX = this._cameraX;
+      for(const c of [this._level.container,this._level.additiveContainer,this._level.topContainer]) {c.x=-this._cameraX;c.y=this._cameraY;}
+      this._player.syncSprites(this._cameraX,this._cameraY,0,this._getMirrorXOffset(this._playerWorldX-this._cameraX));
       this._level.cameraState?.attach();
       this._level.cameraState?.updateVisual();
       this._level._updateGDGround?.();
@@ -8737,7 +8793,7 @@ _showwippopup() {
   _getSongOffsetForWorldX(worldX) {
     const startX = Number.isFinite(Number(worldX)) ? Number(worldX) : 0;
     return this._level?.getSongOffsetForX
-      ? this._level.getSongOffsetForX(startX, { sourceObjects: window.levelObjects })
+      ? this._level.getSongOffsetForX(startX, { y:this._state?.y || 0,channel:this._level._gameplayChannel || 0 })
       : Math.max(0, startX) / 623.16;
   }
   _startAttemptMusic(offset = 0, audioState = null) {
@@ -8761,7 +8817,8 @@ _showwippopup() {
   _getStartPosMusicOffset(){
     const startPositions = this._level.getStartPositions();
     if (this._startPosIndex !== -1 && startPositions[this._startPosIndex]) {
-      return this._getSongOffsetForWorldX(startPositions[this._startPosIndex].x);
+      const p=startPositions[this._startPosIndex];
+      return this._level.getSongOffsetForX(p.x,{y:p.y,channel:+p.raw?.kA26 || 0,order:+p.raw?.kA19 || 0});
     }
     return 0;
   }
