@@ -49,9 +49,12 @@ class PracticeMode {
       dashSlope: playerState.dashSlope,
       collisionModifiers: [playerState.stateDartSlide, playerState.stateHitHead, playerState.stateFlipGravity, playerState.stateNoAutoJump],
       holdDead: playerState._holdDead,
+      skipFlyBoundsOnce: !!playerState._skipFlyBoundsOnce,
+      dualSkipFlyBoundsOnce: !!scene._state2?._skipFlyBoundsOnce,
       dashXVelocity: playerState.dashXVelocity,
       dashYVelocity: playerState.dashYVelocity,
       dashSpin: scene._player?._dashSpin || 0,
+      dashSpinFirstTick: !!scene._player?._dashSpinFirstTick,
       dashFireTime: scene._player?._dashFireTime || 0,
       slopeState: scene._player?.captureSlopeState(),
       dualSlopeState: scene._isDual ? scene._player2?.captureSlopeState() : null,
@@ -8687,6 +8690,7 @@ _showwippopup() {
     const musicOffset = this._getStartPosMusicOffset();
     const startPositions = this._level.getStartPositions();
     const activeStartPos = this._startPosIndex !== -1 && !!startPositions[this._startPosIndex];
+    this._startedFromStartPos = activeStartPos;
 
     if (activeStartPos) {
       const pos = startPositions[this._startPosIndex];
@@ -8973,6 +8977,9 @@ _showwippopup() {
     this._state.rotation = checkpointRotation;
     this._player._rotation = checkpointRotation;
     this._player._dashSpin = checkpoint.dashSpin || 0;
+    this._player._dashSpinFirstTick = !!checkpoint.dashSpinFirstTick;
+    this._state._skipFlyBoundsOnce = !!checkpoint.skipFlyBoundsOnce;
+    this._state2._skipFlyBoundsOnce = !!checkpoint.dualSkipFlyBoundsOnce;
     this._player._dashFireTime = checkpoint.dashFireTime || 0;
     if (typeof this._player.setRotation === "function") {
       try { this._player.setRotation(checkpointRotation); } catch (_) {}
@@ -9762,13 +9769,13 @@ _showwippopup() {
         let _0x435587 = this._level.endXPos || 6000;
         let _0x169d53 = this._playerWorldX;
         this._lastPercent = Math.min(99, Math.floor(this._getCurrentPercent()));
-        if (this._lastPercent > this._bestPercent && !this._practicedMode.practiceMode) {
+        if (!this._startedFromStartPos && this._lastPercent > this._bestPercent && !this._practicedMode.practiceMode) {
           this._bestPercent = this._lastPercent;
           localStorage.setItem("bestPercent_" + (window.currentlevel[2] || "level_1"), this._bestPercent);
           this._hadNewBest = true;
           this._showNewBest();
         }
-        if (this._practicedMode.practiceMode) {
+        if (!this._startedFromStartPos && this._practicedMode.practiceMode) {
           const pracKey = "practiceBestPercent_" + (window.currentlevel[2] || "level_1");
           const prevPracticeBest = parseFloat(localStorage.getItem(pracKey) || "0");
           if (this._lastPercent > prevPracticeBest) {
@@ -9967,8 +9974,9 @@ _showwippopup() {
         };
         const _primaryGravityBefore = !!this._state.gravityFlipped;
         const _primarySharedBefore = this._getDualSharedSignature(this._state);
-        // pushButton fires a touched ring before the movement of its tick.
-        this._player.ringJumpOnPress();
+        // _pushButton already fires touched rings at the input boundary.
+        // Replaying the press here fires a second overlapping custom ring
+        // after Options enabled the held button in the preceding command phase.
         this._player.updateJump(verticalDelta);
         this._player.applyObjectForces(verticalDelta);
         this._state.y = gdAdvancePosition(this._state.y, this._state.isDashing ? this._state.dashSlope * horizontalDelta
@@ -10009,7 +10017,6 @@ _showwippopup() {
           const _secondarySharedBefore = this._getDualSharedSignature(this._state2);
           const _secondaryBallInputGravity = this._state2.isBall && this._state2.upKeyPressed;
           const _secondarySpiderInputGravity = this._state2.isSpider && this._state2.upKeyPressed;
-          this._player2.ringJumpOnPress();
           this._player2.updateJump(verticalDelta);
           this._player2.applyObjectForces(verticalDelta);
           this._state2.y = gdAdvancePosition(this._state2.y, this._state2.isDashing ? this._state2.dashSlope * horizontalDelta
@@ -10212,6 +10219,8 @@ _showwippopup() {
     this._level.stepPulseTriggers(deltaTime / 1000, this._colorManager);
     this._colorManager.step(deltaTime / 1000);
     this._level.checkEnterEffectTriggers(playerX);
+    this._player.finishRingContacts();
+    this._player2?.finishRingContacts();
     // Only the last 240 Hz tick of a frame is drawn: like GD, the visual
     // side (colours on sprites, culling, enter effects, background, ground)
     // runs once per frame with the frame's whole time step.
@@ -10898,7 +10907,7 @@ _showwippopup() {
     this._player.playEndAnimation(endX, () => this._levelComplete(), this._endPortalGameY);
   }
   _levelComplete() {
-    if (!this._practicedMode.practiceMode) {
+    if (!this._startedFromStartPos && !this._practicedMode.practiceMode) {
       const isNonPersistentCoinLevel = window.isEditor || this._level?._isStoredUserLevel?.();
       if (isNonPersistentCoinLevel) {
         this._level.resetCoinsForEditorCompletion?.();
@@ -10918,7 +10927,7 @@ _showwippopup() {
         window._completedLevels = completedSet.length;
         localStorage.setItem("gd_completedLevels", window._completedLevels);
       }
-    } else {
+    } else if (!this._startedFromStartPos) {
       this._practiceBestPercent = 100;
       localStorage.setItem("practiceBestPercent_" + (window.currentlevel[2] || "level_1"), 100);
       if (this._updatePracticeHUDBar) this._updatePracticeHUDBar();

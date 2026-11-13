@@ -27,14 +27,14 @@
       this.nextArrival = Array.isArray(saved) ? this.arrivals.size : saved.nextArrival;
       this.items.clear();
     }
-    stopGroup(group) {
-      for (const [id, trig] of this.active) if (trig.groups?.includes(group)) this.active.delete(id);
+    stopGroup(group, matches = null) {
+      for (const [id, trig] of this.active) if (matches ? matches(trig) : trig.groups?.includes(group)) this.active.delete(id);
     }
-    controlGroup(group, command) {
+    controlGroup(group, command, matches = null) {
       // Native controlGradientTrigger removes on Stop/Pause and reruns
       // the authored command on Resume (there is no gradient timer).
-      if (command !== 2) { this.stopGroup(group); return; }
-      for (const trig of this.level._gradientTriggers || []) if (trig.groups?.includes(group)) this.trigger(trig);
+      if (command !== 2) { this.stopGroup(group, matches); return; }
+      for (const trig of this.level._gradientTriggers || []) if (matches ? matches(trig) : trig.groups?.includes(group)) this.trigger(trig);
     }
     target(id) {
       const r = this.level.gdRenderer;

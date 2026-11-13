@@ -150,6 +150,16 @@ test('rotate uses an invisible GD centre and rotates the matching collider', () 
   near((gd.x + gd.offX) * 2, col.x); near((gd.y + gd.offY) * 2, col.y);
 });
 
+test('rotating dash orbs retain their live direction through checkpoints and reset it on retry', () => {
+  const l=fixture(['1,1704,2,100,3,100,6,45,57,1','1,1346,2,0,51,1,68,30,10,1']);
+  const orb=l.objects[0];l.checkRotateTriggers(0);l.stepRotateTriggers(.5);near(orb.orbRotation,60);
+  const saved=l.captureRuntimeState();l.stepRotateTriggers(.5);near(orb.orbRotation,75);
+  l.resetObjects();l.resetRotateTriggers();near(orb.orbRotation,45);
+  l.restoreRuntimeState(saved);near(orb.orbRotation,60);
+  const p=Object.create(context.testAPI.PlayerObject.prototype);p.p=new context.testAPI.PlayerState();
+  p._startDash(orb);near(p.p.dashSlope,-Math.sqrt(3),1e-6);
+});
+
 test('target rotation follows a moving real position indefinitely and preserves its checkpoint references', () => {
   const l = fixture(['1,211,2,100,3,1000,57,293', '1,1764,2,200,3,1100,57,294',
     '1,1346,2,0,51,293,71,293,100,1,401,294,402,90,397,1,10,-1']);
@@ -1232,6 +1242,23 @@ test('only-move scaling leaves object and collision size unchanged', () => {
   near(l.objects[0].w, 60); near(l.objects[0].h, 60);
   assert.deepEqual(Array.from(l.gdObjects[0].affine), [1, 0, 0, 1]);
 });
+test('tiny Scale command samples retain native .01 magnitude and x100 restores full collision size', () => {
+  for(const sign of [1,-1]) {
+    const l=fixture([block,`1,2067,2,0,51,1,150,${sign*.001},151,0.001`,
+      '1,2067,2,0,51,1,150,100,151,100,57,7,62,1']);
+    l.checkScaleTriggers(0);l.stepScaleTriggers(0);
+    near(l.objects[0].w,.6);near(l.objects[0].h,.6);
+    near(l.gdObjects[0].affine[0],sign*.01);near(l.gdObjects[0].affine[3],.01);
+    const checkpoint=l.captureRuntimeState();
+    for(let i=0;i<2;i++) {
+      if(i){l.resetObjects();l.restoreRuntimeState(checkpoint);}
+      l._activateSpawnedGroup(7);l.stepScaleTriggers(0);
+      near(l.objects[0].w,60);near(l.objects[0].h,60);
+      near(l.gdObjects[0].affine[0],sign);near(l.gdObjects[0].affine[3],1);
+    }
+  }
+});
+
 test('nonuniform scale uses world or reference axes and preserves the actual polygon', () => {
   for (const relative of [false, true]) {
     const l = fixture(['1,1,2,200,3,200,6,45,57,1', '1,1764,2,100,3,100,6,45,57,2',
@@ -1875,12 +1902,16 @@ test('spider normal/mini body uses native 27-point geometry for floors, ceilings
   scene._state={y:0};
 });
 
-test('dash direction reads horizontal and vertical editor flips', () => {
-  for (const rot of [0, 90, 180, 270]) for (const flipX of [0, 1]) for (const flipY of [0, 1]) {
+test('dash direction follows native rotation and Flip X while Flip Y only changes the sprite', () => {
+  for (const rot of [20, 45, 90, 180, 270]) for (const flipX of [0, 1]) for (const flipY of [0, 1]) {
     const l = fixture([`1,1704,2,100,3,100,6,${rot},4,${flipX},5,${flipY}`]);
-    const angle = -l.objects[0].orbRotation * Math.PI / 180;
-    near(Math.cos(angle), Math.cos(-rot * Math.PI / 180) * (flipX ? -1 : 1));
-    near(Math.sin(angle), Math.sin(-rot * Math.PI / 180) * (flipY ? -1 : 1));
+    const p=Object.create(context.testAPI.PlayerObject.prototype);p.p=new context.testAPI.PlayerState();
+    p._startDash(l.objects[0]);
+    let angle=-(rot+(flipX?180:0))%360;
+    if(angle>180)angle-=360;if(angle < -180)angle+=360;
+    if(Math.abs(angle)>90)angle=(angle>0?180:-180)-angle;
+    angle=Math.max(-70,Math.min(70,angle));
+    near(p.p.dashSlope,Math.tan(angle*Math.PI/180),1e-6);
   }
 });
 
@@ -2124,6 +2155,28 @@ test('S, H, J and gravity-flip blocks create live colliders and expire their arm
   p._hitArmedCeiling(100); assert.equal(p.p.gravityFlipped, true); near(p.p.y, 100); near(p.p.yVelocity, -4);
   p._updateCollisionModifiers([], 400, 400, 30); assert.equal(p.p.stateFlipGravity, 1);
   p._updateCollisionModifiers([], 400, 400, 30); assert.equal(p.p.stateFlipGravity, 0);
+});
+
+test('an S block preserves the buffered ring press that existed before stopping the dash', () => {
+  const l=fixture(['1,1829,2,100,3,100','1,36,2,100,3,100']);
+  const p=Object.create(context.testAPI.PlayerObject.prototype);p.p=new context.testAPI.PlayerState();
+  p._scene={};p._gameLayer=l;p.p.gravityFlipped=true;p.p.queuedHold=p.p.upKeyDown=true;
+  p._startDash({orbRotation:55});p.p._orbActivationConsumedForPress=true;
+  p._orbpadHitEffect=p.runRotateAction=p._markActivatedOrbSprites=()=>{};
+  const pass={bufferedPress:!!(p.p.queuedHold&&p.p.upKeyDown)};
+  p._updateCollisionModifiers(l.objects,200,200,30);
+  assert.equal(p.p.isDashing,false);assert.equal(p.p.upKeyDown,false);assert.equal(p.p.queuedHold,true);
+  p._handleRingContact(l.objects.find(o=>o.orbId===36),pass);
+  assert.ok(p.p.yVelocity<0);assert.equal(p.p.queuedHold,false);assert.equal(pass.consumed,true);
+});
+
+test('ending a ball dash restores forward rolling before the next portal contact', () => {
+  const p=Object.create(context.testAPI.PlayerObject.prototype);p.p=new context.testAPI.PlayerState();
+  p.p.isBall=true;p.p.gravityFlipped=true;p._startDash({orbRotation:45});
+  p._dashSpin=-124*Math.PI/180;p._stopDash();
+  assert.equal(p.rotateActionActive,true);assert.equal(p._ballReversed,false);
+  const before=p._rotation;p.updateRotateAction(1/240);
+  near(p._rotation,before+p.rotateActionRate/240);assert.ok(p._rotation<before);
 });
 
 test('native dash vectors retain forward travel and clamp the line independently of gravity', () => {
@@ -2522,6 +2575,48 @@ test('custom orbs choose toggle or spawn without invoking both native commands',
   }
 });
 
+test('an activating custom orb spawns its group while spawn-only orbs preserve its toggle state', () => {
+  for (const spawnOnly of [false,true]) {
+    const l=fixture(['1,1,2,100,3,100,57,9',
+      '1,901,2,0,3,0,51,9,28,30,10,0,57,7,62,1',
+      `1,1594,2,100,3,100,51,7,56,1,504,${spawnOnly?1:0}`]);
+    l._groupEnabled[7]=false;
+    l.activateCustomRing(l.objects.find(o=>o.orbId===1594));l.stepMoveTriggers(0);
+    assert.equal(l._groupEnabled[7],!spawnOnly);
+    near(l.gdRenderer.groups.get(9)[0].offX,spawnOnly?0:30);
+  }
+});
+
+test('a drop orb emits its specific event before its impulse and preserves same-pass custom orb input', () => {
+  const l=fixture(['1,1330,2,100,3,100','1,1594,2,100,3,100,51,7,56,1',
+    '1,3604,2,0,430,39,51,8','1,1049,2,0,57,8,62,1,51,9,56,1']);
+  l._groupEnabled[7]=l._groupEnabled[9]=false;l.checkLogicTriggers(0);
+  const p=Object.create(context.testAPI.PlayerObject.prototype);p.p=new context.testAPI.PlayerState();
+  p._scene={};p._gameLayer=l;p.p.upKeyDown=p.p.queuedHold=true;p.p.yVelocity=123;
+  p._orbpadHitEffect=p.runRotateAction=p._markActivatedOrbSprites=()=>{};
+  const events=[],event=l.logicState.event;
+  l.logicState.event=function(id,...args){events.push({id,vy:p.p.yVelocity});return event.call(this,id,...args);};
+  const ctx={};p._handleRingContact(l.objects.find(o=>o.orbId===1330),ctx);
+  assert.deepEqual(events.map(e=>e.id),['orbActivated',39]);
+  assert.ok(events.every(e=>e.vy===123));assert.equal(l._groupEnabled[9],true);
+  assert.equal(p.p.queuedHold,false);assert.equal(ctx.bufferedPress,true);
+  p._handleRingContact(l.objects.find(o=>o.orbId===1594),ctx);
+  assert.equal(l._groupEnabled[7],true);assert.equal(ctx.customUsed,true);
+  assert.deepEqual(events.map(e=>e.id),['orbActivated',39,'orbActivated',40]);
+});
+
+test('ring presses retain first-contact order and missed rings until command cleanup', () => {
+  const p=Object.create(context.testAPI.PlayerObject.prototype);p.p=new context.testAPI.PlayerState();
+  p.p.upKeyDown=true;p._scene={};
+  const old={orbId:1751},newer={orbId:36},missed={orbId:141};
+  p._nativeTouchedRings=[old,missed,newer];p._touchedRings=[newer,old];
+  p._ringContactsThisPass=new Set([newer,old]);
+  const seen=[];p._handleRingContact=o=>seen.push(o);
+  p.ringJumpOnPress(true);assert.deepEqual(seen,[old,missed,newer]);
+  p.finishRingContacts();seen.length=0;p.ringJumpOnPress(true);
+  assert.deepEqual(seen,[old,newer]);
+});
+
 test('Animate and Spawn triggers restart one-shot frame animations and honour speed/offset flags', () => {
   const l = fixture(['1,1614,2,100,3,100,57,8,123,1,107,2',
     '1,1585,2,0,3,0,51,8', '1,1268,2,5,3,0,51,8']);
@@ -2699,13 +2794,23 @@ test('dash cube and ball spin independently of the dash line and respect gravity
   const p = Object.create(context.testAPI.PlayerObject.prototype); p.p = new context.testAPI.PlayerState();
   for (const ball of [false, true]) for (const flipped of [false, true]) {
     Object.assign(p.p, { isBall: ball, gravityFlipped: flipped, gravityMod: 0.5 });
-    p._startDash({ orbRotation: -45 }); p.updateDashRotation(0.3);
+    p._startDash({ orbRotation: -45 }); p.updateDashRotation(1/240); near(p._dashSpin,0); p.updateDashRotation(0.3);
     near(p._dashSpin, (flipped ? -1 : 1) * 144 * Math.PI / 180);
     near(p._rotation, -Math.atan(p.p.dashSlope));
     const spin = p._dashSpin; p._stopDash(); near(p._rotation, spin); near(p._dashSpin, 0);
   }
   p.p.isFlying = true; p._startDash({ orbRotation: -45 }); p.updateDashRotation(0.3);
   near(p._dashSpin, 0); near(p._rotation, -Math.atan(p.p.dashSlope));
+});
+
+test('a same-mode portal restarts dash art even when its portal effects are hidden', () => {
+  const p=Object.create(context.testAPI.PlayerObject.prototype);p.p=new context.testAPI.PlayerState();
+  p._scene={_physicsFrame:10};p._gameLayer={logicState:{event(){}}};
+  p._startDash({orbRotation:0});p.updateDashRotation(1/240);p.updateDashRotation(1.5);
+  assert.ok(p._dashSpin>20);p._playPortalShine({type:'portal_cube',noEffects:true});
+  near(p._dashSpin,0);assert.equal(p.p.isDashing,true);
+  p.updateDashRotation(1/240);near(p._dashSpin,0);
+  p.updateDashRotation(.025);near(p._dashSpin,24*Math.PI/180);
 });
 
 test('particle spawn areas and quads share saved rotation, flips and group transforms', () => {
@@ -3072,6 +3177,63 @@ test('curved keyframes interpolate through all points and Stop cancels the live 
   l._applyStopTrigger({targetGroup:1}); l.keyframeState.step(1);
   near(l.gdObjects[0].offX, 100); near(l.gdObjects[0].offY, 100);
   assert.equal(l.keyframeState.active.length, 0);
+});
+
+test('keyframe lookup skips unrelated paths while retaining live marker positions', () => {
+  const unrelated=Array.from({length:300},(_,i)=>`1,3032,2,1000,3,1000,373,${i+100},57,${i+1000}`);
+  const l=fixture([block,...unrelated,
+    '1,3032,2,1000,3,1000,57,77,373,5,10,1',
+    '1,3032,2,1100,3,1000,373,5,374,1',
+    '1,3033,2,0,51,1,76,77,520,1,521,1,545,1']);
+  let reads=0;const groups=l._getLevelObjectGroupIds;
+  l._getLevelObjectGroupIds=function(...args){reads++;return groups.apply(this,args);};
+  const trig=l._keyframeTriggers[0],marker=l.keyframeState.nodes.at(-1);
+  l.gdObjects[marker.uid].offX=50;
+  l.keyframeState.trigger(trig);l.keyframeState.step(.5);
+  near(l.gdObjects[0].offX,75);assert.ok(reads<3,'unrelated marker membership is not rescanned');
+});
+
+test('duplicate keyframe indices replace the saved marker instead of creating another segment', () => {
+  const l=fixture([block,
+    '1,3032,2,1000,3,1000,57,77,373,5,10,1,378,1,379,2',
+    '1,3032,2,1025,3,1000,373,5,374,1,375,1,378,1',
+    '1,3032,2,1100,3,1000,373,5,374,2,378,1',
+    '1,3032,2,1025,3,1000,373,5,374,1,375,1,378,1',
+    '1,3033,2,0,51,1,76,77,520,1,521,1,545,1']);
+  l.checkKeyframeTriggers(0);const path=l.keyframeState.active[0].path;
+  assert.equal(path.frames.length,3);assert.deepEqual(Array.from(path.durations),[.25,.75]);
+  l.keyframeState.step(.4);near(l.gdObjects[0].offX,40);
+});
+
+test('Control ID Stop, Pause and Resume affect labelled commands independently of their target groups', () => {
+  const l=fixture([block,'1,1,2,200,3,100,57,2',
+    '1,901,2,0,51,1,28,100,10,1,57,7',
+    '1,901,2,0,51,2,28,100,10,1,534,7',
+    '1,1616,2,1000,51,7,535,1,580,1',
+    '1,1616,2,1100,51,7,535,1,580,2',
+    '1,1616,2,1200,51,7,535,1']);
+  l.checkMoveTriggers(0);l.stepMoveTriggers(0);l.stepMoveTriggers(.25);
+  l._applyStopTrigger(l._stopTriggers[0]);l.stepMoveTriggers(.25);
+  near(l.gdObjects[0].offX,50);near(l.gdObjects[1].offX,25);
+  const checkpoint=l.captureRuntimeState();l.resetObjects();l.restoreRuntimeState(checkpoint);
+  l._applyStopTrigger(l._stopTriggers[1]);l.stepMoveTriggers(.25);
+  near(l.gdObjects[0].offX,75);near(l.gdObjects[1].offX,50);
+  l._applyStopTrigger(l._stopTriggers[2]);l.stepMoveTriggers(.25);
+  near(l.gdObjects[0].offX,100);near(l.gdObjects[1].offX,50);
+});
+
+test('timed curved keyframes ease across reference nodes using distance-based spline knots', () => {
+  const l=fixture([block,
+    '1,3032,2,1000,3,1000,57,77,373,5,10,1,378,1,379,2,30,18',
+    '1,3032,2,1025,3,1000,373,5,374,1,375,1,378,1',
+    '1,3032,2,1100,3,1000,373,5,374,2,378,1',
+    '1,3033,2,0,51,1,76,77,520,1,521,1,545,1']);
+  l.checkKeyframeTriggers(0);l.keyframeState.step(.1);
+  near(l.gdObjects[0].offX,100*Easing.sample(18,2,.1));near(l.gdObjects[0].offY,0);
+  const checkpoint=l.captureRuntimeState();l.keyframeState.step(.9);
+  near(l.gdObjects[0].offX,100);assert.equal(l.keyframeState.active.length,0);
+  l.resetObjects();l.restoreRuntimeState(checkpoint);l.keyframeState.step(.9);
+  near(l.gdObjects[0].offX,100);assert.equal(l.keyframeState.active.length,0);
 });
 
 test('slope checkpoint state survives repeated restores and a fresh attempt clears it', () => {

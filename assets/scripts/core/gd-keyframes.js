@@ -23,33 +23,55 @@
     }
     return { rotation, sx, sy };
   }
-  function spline(values) {
+  function spline(values, knots) {
     const n = values.length, second = new Array(n).fill(0), rhs = new Array(n).fill(0);
-    // Natural cubic spline, with uniformly spaced keyframe indices. Timing
-    // and easing choose the parameter within each individual segment.
     for (let i = 1; i < n - 1; i++) {
-      const p = 0.5 * second[i - 1] + 2;
-      second[i] = -0.5 / p;
-      rhs[i] = (3 * (values[i + 1] - 2 * values[i] + values[i - 1]) - 0.5 * rhs[i - 1]) / p;
+      const left = knots[i] - knots[i - 1], right = knots[i + 1] - knots[i];
+      const ratio = left / (left + right), p = ratio * second[i - 1] + 2;
+      second[i] = (ratio - 1) / p;
+      rhs[i] = (6 * ((values[i + 1] - values[i]) / right - (values[i] - values[i - 1]) / left) /
+        (left + right) - ratio * rhs[i - 1]) / p;
     }
     for (let i = n - 2; i >= 0; i--) second[i] = second[i] * second[i + 1] + rhs[i];
     return second;
   }
-  function sampleSpline(values, second, i, t) {
-    const a = 1 - t;
+  function sampleSpline(values, second, knots, i, t) {
+    const a = 1 - t, h = knots[i + 1] - knots[i];
     return a * values[i] + t * values[i + 1] +
-      ((a * a * a - a) * second[i] + (t * t * t - t) * second[i + 1]) / 6;
+      ((a * a * a - a) * second[i] + (t * t * t - t) * second[i + 1]) * h * h / 6;
   }
   class GDKeyframeState {
-    constructor(level) { this.level = level; this.nodes = []; this.active = []; }
-    add(object, uid) { this.nodes.push({ object, uid }); }
+    constructor(level) {
+      this.level = level; this.nodes = []; this.active = [];
+      this.animationStarts = new Map(); this.pathNodes = new Map(); this.orderedPaths = new Map();
+    }
+    add(object, uid) {
+      const node = { object, uid }, path = Number(object._raw[373]) || 0;
+      this.nodes.push(node);
+      let indices = this.pathNodes.get(path);
+      if (!indices) this.pathNodes.set(path, indices = new Map());
+      indices.set(Number(object._raw[374]) || 0, node);
+      this.orderedPaths.delete(path);
+      // Membership is authored once. Starting a path must not parse every
+      // unrelated marker's groups again (Orbit has thousands of markers).
+      for (const group of this.level._getLevelObjectGroupIds(object)) {
+        let starts = this.animationStarts.get(group);
+        if (!starts) this.animationStarts.set(group, starts = new Map());
+        if (!starts.has(path)) starts.set(path, node);
+      }
+    }
     pathFor(trig, first = null) {
       const animationGroup = Number(trig.raw[76]) || 0;
-      first ||= this.nodes.find(({ object }) => this.level._getLevelObjectGroupIds(object).includes(animationGroup));
+      first ||= this.animationStarts.get(animationGroup)?.values().next().value;
       if (!first || !animationGroup) return null;
       const group = Number(first.object._raw[373]) || 0;
-      const nodes = this.nodes.filter(({ object }) => (Number(object._raw[373]) || 0) === group)
-        .sort((a, b) => (Number(a.object._raw[374]) || 0) - (Number(b.object._raw[374]) || 0));
+      // refreshKeyframeAnims indexes the path by keyframe index. Duplicate
+      // saved markers replace that entry; they are not zero-time segments.
+      let nodes = this.orderedPaths.get(group);
+      if (!nodes) {
+        nodes = [...(this.pathNodes.get(group) || [])].sort((a, b) => a[0] - b[0]).map(entry => entry[1]);
+        this.orderedPaths.set(group, nodes);
+      }
       const renderer = this.level.gdRenderer;
       // The animation group selects a path, not a starting frame. Native
       // playKeyframeAnimation passes that path's entire ordered node array
@@ -73,11 +95,12 @@
       // repeating a facial animation then compounds that distortion forever.
       // The last saved node owns this return segment's duration and easing.
       if (frames[frames.length - 1].closeLoop) frames.push({ ...frames[0] });
-      const durations = frames.slice(0, -1).map(f => f.duration);
+      const durations = frames.slice(0, -1).map(f => f.duration), easingRuns = [];
       for (let a = 0; a < frames.length - 1; a++) {
         if (frames[a].reference || frames[a].timeMode === 0) continue;
         let b = a + 1;
         while (b < frames.length - 1 && frames[b].reference) b++;
+        if (b > a + 1) easingRuns.push({ start: a, end: b, easing: frames[a].easing, rate: frames[a].rate });
         const weights = [];
         for (let j = a; j < b; j++) weights.push(frames[a].timeMode === 2
           ? Math.hypot(frames[j + 1].x - frames[j].x, frames[j + 1].y - frames[j].y) : 1);
@@ -93,20 +116,17 @@
         frames[i].rotation = frames[i - 1].rotation + delta;
       }
       const xs = frames.map(f => f.x), ys = frames.map(f => f.y);
-      return { frames, durations, xs, ys, xx: spline(xs), yy: spline(ys), target: Number(first.object._raw[51]) || 0 };
+      const knots = [0];
+      for (const duration of durations) knots.push(knots[knots.length - 1] + Math.max(1e-12, duration));
+      return { frames, durations, totalDuration: durations.reduce((a, b) => a + b, 0), knots, easingRuns, xs, ys, xx: spline(xs, knots), yy: spline(ys, knots), target: Number(first.object._raw[51]) || 0 };
     }
     trigger(trig) {
       if (!this.level._isTriggerSaveObjectLive(trig.uid)) return;
       // One animation group can contain starting markers for many paths
       // (Skeletal's logos and articulated skeletons). All must run. If the
       // group includes further markers of the same path, start only once.
-      const animationGroup = Number(trig.raw[76]) || 0, starts = new Map();
-      if (!animationGroup) return;
-      for (const node of this.nodes) {
-        if (!this.level._getLevelObjectGroupIds(node.object).includes(animationGroup)) continue;
-        const group = Number(node.object._raw[373]) || 0;
-        if (!starts.has(group)) starts.set(group, node);
-      }
+      const animationGroup = Number(trig.raw[76]) || 0, starts = this.animationStarts.get(animationGroup);
+      if (!starts) return;
       for (const first of starts.values()) this.startPath(trig, this.pathFor(trig, first));
     }
     startPath(trig, path) {
@@ -125,12 +145,22 @@
     pose(active) {
       const { path, mod } = active, { frames, durations } = path;
       let time = mod.time > 0 ? active.time / mod.time : Infinity, i = 0;
+      const done = time >= path.totalDuration;
+      // Native commands ease the complete timed run through reference nodes,
+      // then sample a spline whose knots use those distributed durations.
+      let runEased = false;
+      for (const run of path.easingRuns || []) {
+        const start = path.knots[run.start], duration = path.knots[run.end] - start;
+        if (time >= start && time < start + duration) {
+          time = start + Easing.sample(run.easing, run.rate, (time - start) / duration) * duration;
+          runEased = true; break;
+        }
+      }
       while (i < durations.length - 1 && time >= durations[i]) { time -= durations[i]; i++; }
-      const done = i === durations.length - 1 && time >= durations[i];
       const progress = durations[i] > 0 ? Math.min(1, time / durations[i]) : 1;
-      const a = frames[i], b = frames[i + 1], t = Easing.sample(a.easing, a.rate, progress), first = frames[0];
-      const x = a.curve ? sampleSpline(path.xs, path.xx, i, t) : lerp(a.x, b.x, t);
-      const y = a.curve ? sampleSpline(path.ys, path.yy, i, t) : lerp(a.y, b.y, t);
+      const a = frames[i], b = frames[i + 1], t = runEased || a.reference ? progress : Easing.sample(a.easing, a.rate, progress), first = frames[0];
+      const x = a.curve ? sampleSpline(path.xs, path.xx, path.knots, i, t) : lerp(a.x, b.x, t);
+      const y = a.curve ? sampleSpline(path.ys, path.yy, path.knots, i, t) : lerp(a.y, b.y, t);
       return { x: (x - first.x) * mod.x, y: (y - first.y) * mod.y,
         rot: (lerp(a.rotation, b.rotation, t) - first.rotation) * mod.rot,
         sx: 1 + (lerp(a.sx, b.sx, t) / (first.sx || 1) - 1) * mod.sx,

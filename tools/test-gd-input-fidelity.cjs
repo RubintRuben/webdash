@@ -107,6 +107,37 @@ const out = path.resolve('work/qa-input-fidelity');fs.mkdirSync(out,{recursive:t
   });
   assert.deepEqual(controlIsolation,{released:true,p2Only:true,p1Only:true});
   console.log('PASS releasing during disabled controls stays released; dual control restrictions stay independent');
+  await load('kA4,0;1,1594,2,300,3,100,51,7,56,1,507,1;1,1594,2,300,3,100,51,7,56,1,507,1;1,1,2,50000,3,15;');
+  const ringPress=await page.evaluate(()=>{
+   const s=scene.get('GameScene'),l=s._level;s._restartLevel();s._waitingForLevelMusic=false;s._audio.pauseMusic();s._paused=false;
+   s._playerWorldX=600;s._state.y=s._state.lastY=200;s._state.onGround=false;
+   s._setPlayerGamemode(s._player,s._state,'ship',true);
+   s._player._nativeTouchedRings=l.objects.filter(o=>o.orbId===1594);
+   let activations=0;const activate=l.activateCustomRing;l.activateCustomRing=function(...a){activations++;return activate.apply(this,a);};
+   l.logicState._options({165:'1'});s._spaceKey.isDown=s._spaceWasDown=true;s._pushButton();l.logicState._options({165:'-1'});
+   const immediate=activations;s.update(0,1000/240);s._spaceKey.isDown=false;
+   l.activateCustomRing=activate;return{immediate,next:activations};
+  });
+  assert.deepEqual(ringPress,{immediate:1,next:1});
+  console.log('PASS Options resumes one ring press without firing another overlapping custom ring on the next tick');
+  await load('kA4,0;1,1764,2,300,3,100,57,7;1,1,2,50000,3,15;');
+  const teleportBounds=await page.evaluate(()=>{
+   const s=scene.get('GameScene'),l=s._level,out=[];
+   const floor=l.getFloorY,ceiling=l.getCeilingY;
+   l.getFloorY=()=>400;l.getCeilingY=()=>1000;
+   for(const vy of [20,-20]) {
+    s._restartLevel();s._waitingForLevelMusic=false;s._audio.pauseMusic();s._paused=true;
+    s._setPlayerGamemode(s._player,s._state,'ship',true);
+    Object.assign(s._state,{isMini:false,yVelocity:vy,onGround:false});
+    l.logicState._teleport({raw:{51:'7'},uid:-1,x:0,y:0});
+    s._player.checkCollisions(s._playerWorldX-centerX);const first={y:s._state.y,vy:s._state.yVelocity};
+    s._player.checkCollisions(s._playerWorldX-centerX);out.push({first,next:{y:s._state.y,vy:s._state.yVelocity,ground:s._state.onGround}});
+   }
+   l.getFloorY=floor;l.getCeilingY=ceiling;return out;
+  });
+  assert.deepEqual(teleportBounds,[{first:{y:200,vy:20},next:{y:430,vy:20,ground:false}},
+   {first:{y:200,vy:-20},next:{y:430,vy:0,ground:true}}]);
+  console.log('PASS teleport skips one corridor pass; a ship clamped while rising preserves its speed');
   await load('kA4,0;1,2013,2,100,3,0,371,0.5,10,1;1,31,2,800,3,300,kA2,0,kA20,1;1,1,2,50000,3,15;');
   const start=await page.evaluate(()=>{const s=scene.get('GameScene');window.startPosSwitcher=true;s._startPosIndex=0;s._restartLevel();s._waitingForLevelMusic=false;s._audio.pauseMusic();
    const c=s._level.cameraState,initial={x:s._playerWorldX,y:s._state.y,cam:s._cameraX,zoom:c.values.zoom,lead:c.follow.leadX,tweens:c.tweens.length};
@@ -134,6 +165,35 @@ const out = path.resolve('work/qa-input-fidelity');fs.mkdirSync(out,{recursive:t
   assert.ok(Math.abs(dashStarts[1].effectTime-63.064035)<.0001);
   assert.ok(dashStarts[1].initial.x>dashStarts[0].initial.x+2000);assert.ok(dashStarts[2].initial.x>dashStarts[1].initial.x+4000);
   console.log('PASS Dash Start Positions 7–10 clear saved camera locks and show distinct stable rooms in both switch directions');
+  await load('kA4,0;1,31,2,900,3,15;1,1,2,50000,3,15;');
+  const bestRuns=await page.evaluate(()=>{
+   const s=scene.get('GameScene'),key='bestPercent_'+window.currentlevel[2],pkey='practiceBestPercent_'+window.currentlevel[2];
+   let popups=0;s._showNewBest=()=>{popups++;};
+   const run=(index,practice)=>{s._startPosIndex=index;s._restartLevel();s._waitingForLevelMusic=false;s._audio.pauseMusic();s._paused=false;s._practicedMode.practiceMode=practice;
+    s._bestPercent=10;localStorage.setItem(key,'10');localStorage.setItem(pkey,'7');s._physicsFrame=3000;s._playerWorldX=s._level.endXPos*.8;s._state.isDead=true;
+    const before=popups;s.update(0,1000/240);return{start:s._startedFromStartPos,popups:popups-before,best:localStorage.getItem(key),practice:localStorage.getItem(pkey)};};
+   const start=run(0,false),practice=run(0,true),normal=run(-1,false);
+   s._startPosIndex=0;s._restartLevel();s._waitingForLevelMusic=false;s._audio.pauseMusic();s._practicedMode.practiceMode=false;
+   localStorage.setItem(key,'10');const completed=localStorage.getItem('gd_completedSet');s._endTrigger={noEffects:true};s._showCompleteText=()=>{};s._levelComplete();
+   return{start,practice,normal,completionBest:localStorage.getItem(key),completionUnchanged:localStorage.getItem('gd_completedSet')===completed};
+  });
+  assert.deepEqual(bestRuns.start,{start:true,popups:0,best:'10',practice:'7'});
+  assert.deepEqual(bestRuns.practice,{start:true,popups:0,best:'10',practice:'7'});
+  assert.equal(bestRuns.normal.start,false);assert.equal(bestRuns.normal.popups,1);assert.equal(bestRuns.normal.best,'80');
+  assert.equal(bestRuns.completionBest,'10');assert.equal(bestRuns.completionUnchanged,true);
+  console.log('PASS Start Position attempts never announce or persist New Best or completion; normal runs still record progress');
+  for(const later of [false,true]) {
+   const gravity='1,11,2,300,3,100',teleport='1,747,2,300,3,300,54,-200';
+   await load('kA4,0,kA37,1;'+(later?[teleport,gravity]:[gravity,teleport]).join(';')+';1,1,2,50000,3,15;');
+   const cursor=await page.evaluate(()=>{
+    const s=scene.get('GameScene');s._restartLevel();s._waitingForLevelMusic=false;s._audio.pauseMusic();s._paused=false;
+    s._playerWorldX=600;s._state.y=s._state.lastY=600;s._state.onGround=false;s._state.yVelocity=0;
+    s._player.checkCollisions(600-centerX);const first={y:s._state.y,g:s._state.gravityFlipped};
+    s._player.checkCollisions(600-centerX);return{first,second:s._state.gravityFlipped};
+   });
+   assert.deepEqual(cursor,{first:{y:200,g:later},second:true});
+  }
+  console.log('PASS vertical teleports preserve the authored cursor through Y culling and still activate later destination portals');
   // Native Toggle + portal ordering: a portal exposed by this tick's touch
   // must change mode before the tick's solid pass and next updateJump.
   await load('kA4,0;1,13,2,300,3,120,57,7;1,1049,2,0,3,0,51,7;1,1049,2,300,3,120,11,1,51,7,56,1;1,1,2,50000,3,15;');

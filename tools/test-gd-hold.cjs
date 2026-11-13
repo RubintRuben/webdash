@@ -46,25 +46,33 @@ function readFixture(file) {
       await page.waitForFunction(()=>{
         const s=window.scene.get('GameScene');return s._level!==window.__holdOldLevel&&!s._slideIn&&!s._audio.musicLoading;
       },null,{timeout:120000});
-      const result=await page.evaluate(limit=>{
+      const result=await page.evaluate(({limit,stopFrame,cbf,checkpointFrames})=>{
         const s=window.scene.get('GameScene');
         s._level.logicState?.persistent.clear();s._level.logicState?.persistentTimers.clear();
         s._restartLevel();s._waitingForLevelMusic=false;s._audio.pauseMusic();
-        s._menuActive=s._slideIn=s._paused=false;window.noClip=false;window.clickBetweenFrames=false;
+        s._menuActive=s._slideIn=s._paused=false;window.noClip=false;window.clickBetweenFrames=cbf;
         let presses=0;const push=s._pushButton;
         s._pushButton=function(...args){if(!args[1])presses++;return push.apply(this,args);};
         s._spaceKey.isDown=true;s._spaceWasDown=true;s._pushButton();
         const update=s.constructor.prototype.update,tick=1000/240;
-        for(let i=0;i<limit&&!s._state.isDead&&!s._levelWon;i++){
+        const wanted=new Set(checkpointFrames),checkpoints=[];
+        for(let i=0;i<limit&&s._physicsFrame<stopFrame&&!s._state.isDead&&!s._levelWon;i++){
           s._visualTick=i%4===3;update.call(s,i*tick,tick);
+          if(wanted.has(s._physicsFrame))checkpoints.push({frame:s._physicsFrame,x:s._playerWorldX/2,y:s._state.y/2+90});
         }
         s._paused=true;
         return {frame:s._physicsFrame,won:!!s._levelWon,dead:!!s._state.isDead,noclip:window.noClip,presses,
-          x:s._playerWorldX/2,y:s._state.y/2+90,percent:s._getCurrentPercent()};
-      },reference.frame+240);
+          x:s._playerWorldX/2,y:s._state.y/2+90,percent:s._getCurrentPercent(),checkpoints};
+      },{limit:reference.frame+240,stopFrame:reference.kind==='prefix'?reference.frame:Infinity,
+        cbf:!!reference.clickBetweenSteps,checkpointFrames:(reference.checkpoints||[]).map(r=>r.frame)});
       assert.deepEqual(errors,[]);assert.equal(result.presses,1);assert.equal(result.noclip,false);
       for(const key of ['frame','won','dead','x','y'])assert.equal(result[key],reference[key],reference.name+' '+key);
       if(reference.percent!==undefined)assert.equal(result.percent,reference.percent);
+      assert.equal(result.checkpoints.length,(reference.checkpoints||[]).length);
+      for(const expected of reference.checkpoints||[]){
+        const actual=result.checkpoints.find(r=>r.frame===expected.frame);
+        for(const axis of ['x','y'])assert.ok(Math.abs(actual[axis]-expected[axis])<.002,JSON.stringify({expected,actual,axis}));
+      }
       const out=path.resolve(process.env.GD_HOLD_OUTPUT||'work/hold-qa');fs.mkdirSync(out,{recursive:true});
       fs.writeFileSync(path.join(out,reference.name.replace(/[^a-z0-9]+/gi,'-')+'.json'),JSON.stringify({file,reference,result,errors},null,2));
       console.log('PASS '+reference.name+': '+JSON.stringify(result));

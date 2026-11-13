@@ -1518,6 +1518,7 @@ window.LevelObject = class LevelObject {
       multiTriggered: levelObj._raw?.[87] === "1",
       spawnTriggered: this._isTriggerSpawnTriggered(levelObj),
       channel: Number(levelObj._raw?.[170]) || 0,
+      controlId: Number(levelObj._raw?.[534]) || 0,
       groups: this._getLevelObjectGroupIds(levelObj)
     };
   }
@@ -3283,6 +3284,7 @@ window.LevelObject = class LevelObject {
         y: levelObj.y * 2,
         touchTriggered: String(_raw?.[11] ?? _raw?.["11"] ?? "0") === "1",
         targetGroup: parseInt(_raw[51] ?? 0, 10),
+        targetControlId: _raw[535] === "1",
         command: [1, 2].includes(Number(_raw[580])) ? Number(_raw[580]) : 0
       });
     }
@@ -4248,6 +4250,7 @@ window.LevelObject = class LevelObject {
       col._eeInitialBaseX = col.x;
       col._eeInitialBaseY = col.y;
       col._eeInitialRotationDegrees = col.rotationDegrees || 0;
+      col._eeInitialOrbRotation = col.orbRotation;
       col._eeInitialWidth = col.w; col._eeInitialHeight = col.h;
       col._eeInitialRadius = col.hitbox_radius;
       col._eeObjectId = linkedObjectId;
@@ -4544,10 +4547,11 @@ window.LevelObject = class LevelObject {
       orbObj.orbId = levelObj.id;
       // GameObject key 99, m_isMultiActivate: the ring is never marked used
       orbObj.multiActivate = levelObj._raw?.[99] === "1";
-      const orbAngle = -(levelObj.rot || 0) * Math.PI / 180;
-      const orbDX = Math.cos(orbAngle) * (levelObj.flipX ? -1 : 1);
-      const orbDY = Math.sin(orbAngle) * (levelObj.flipY ? -1 : 1);
-      orbObj.orbRotation = -Math.atan2(orbDY, orbDX) * 180 / Math.PI;
+      // startDashing (4f3c6b..4f3ccf) reads object rotation, adds 180
+      // for Flip X and for reflected node axes. Sprite Flip Y does not
+      // reflect this world-space heading (Orbit's 20-degree green dash).
+      const axes = Math.abs(Number(levelObj.rotationX ?? levelObj.rot ?? 0) - Number(levelObj.rotationY ?? levelObj.rot ?? 0));
+      orbObj.orbRotation = (levelObj.rot || 0) + (levelObj.flipX ? 180 : 0) + (axes > 179 ? 180 : 0);
       orbObj._dashHoldTicks = 0;
       registerCollider(orbObj);
       this.objects.push(orbObj);
@@ -6396,7 +6400,11 @@ window.LevelObject = class LevelObject {
       active.elapsed += dt;
       const progress = trig.duration ? Math.min(1, active.elapsed / trig.duration) : 1;
       const sample = Easing.sample(trig.easingType, trig.easingRate, progress);
-      const x = 1 + (active.factorX - 1) * sample, y = 1 + (active.factorY - 1) * sample;
+      // processTransformActions (33566e..3356xx) clamps both command samples
+      // to magnitude .01 before dividing. A .001 shrink followed by x100
+      // therefore restores full size, rather than leaving a tenth-size hitbox.
+      const clamp = value => Math.abs(value) < .01 ? (value < 0 ? -.01 : .01) : value;
+      const x = clamp(1 + (active.factorX - 1) * sample), y = clamp(1 + (active.factorY - 1) * sample);
       const dx = x / (active.prevX || 1e-12), dy = y / (active.prevY || 1e-12);
       // (A scale about the same centre object leaves that object in place.)
       if (trig.centerGroup && ops.some(op => op.trig.centerGroup !== trig.centerGroup &&
@@ -6488,6 +6496,7 @@ window.LevelObject = class LevelObject {
     if (!lockRotation && (col.noTouch || (col.type !== solidType && col.type !== slopeType))) {
       const deltaDeg = deltaRot * 180 / Math.PI;
       col.rotationDegrees = (Number(col.rotationDegrees) || 0) + deltaDeg;
+      if (col.orbRotation !== undefined) col.orbRotation = Math.fround(col.orbRotation + deltaDeg);
       col.rotateSlope(deltaDeg);
       if (col.shape) col.transformShape(Math.cos(deltaRot), -Math.sin(deltaRot), Math.sin(deltaRot), Math.cos(deltaRot));
       col._baseRotationDegrees = col.rotationDegrees;
@@ -6626,7 +6635,7 @@ window.LevelObject = class LevelObject {
     // GJBaseGameLayer::processAreaActions/remap (Steam 322a40..32451f)
     // remaps IDs, never object membership, coordinates or animation values.
     for (const field of ["targetGroup", "centerGroup", "sourceGroup", "targetPosGroup", "targetCenterGroup", "targetRotationGroup", "itemId",
-      "target", "center", "follow", "effectID", "gdChannel", "targetChannel", "animationId"]) {
+      "target", "center", "follow", "controlId", "effectID", "gdChannel", "targetChannel", "animationId"]) {
       if (copy[field] > 0) copy[field] = remap(copy[field]);
     }
     if (copy.directionBounds) copy.directionBounds = copy.directionBounds.map(remap);
@@ -6739,10 +6748,10 @@ window.LevelObject = class LevelObject {
   activateCustomRing(collider) {
     const raw = collider?._eeLevelObject?._raw || {};
     const targetGroup = Number(raw[51]) || 0;
-    // GJBaseGameLayer::activateCustomRing, Steam 325950: these commands
-    // are mutually exclusive, selected by RingObject's property 504.
+    // activateCustomRing (325950) selects spawnGroup or toggleGroupTriggered.
+    // The latter also spawns the enabled group (32b7f0), not just its art.
     if (raw[504] === "1") this._activateSpawnedGroup(targetGroup, this._scene?._colorManager);
-    else this._applyToggleTrigger({ uid: collider._eeObjectId, targetGroup, activate: raw[56] === "1" });
+    else this._toggleGroupTriggered(targetGroup, raw[56] === "1", {uid:collider._eeObjectId});
   }
 
   checkTouchSpawnTriggers(playerX, playerY) {
@@ -7082,9 +7091,13 @@ window.LevelObject = class LevelObject {
     if (!trig || !this._isTriggerSaveObjectLive(trig.uid) || trig.targetGroup <= 0) return;
     const target = trig.targetGroup;
     const command = trig.command || 0;
+    // EffectGameObject properties 534/535 select a command's Control ID.
+    // A Stop using this ID must not cancel every action moving that group.
+    const controlMatch = trig.targetControlId ? active => Number(active?.controlId ?? active?.raw?.[534] ?? 0) === target : null;
     const keepRunning = item => {
       const activeTrigger = item?.trig;
       if (!activeTrigger) return true;
+      if (controlMatch) return !controlMatch(activeTrigger);
       return !this._triggerHasGroup(activeTrigger, target) && activeTrigger.targetGroup !== target;
     };
     // A Count trigger waiting for its value is an action too (native MK2 X45568).
@@ -7106,20 +7119,20 @@ window.LevelObject = class LevelObject {
         if (!keepRunning(pending[i])) pending[i].paused = command === 1;
       for (const item of this._spawnDeferred || []) if (!keepRunning(item)) item.paused = command === 1;
       for (const watcher of this._countWatchers || []) if (!keepRunning(watcher)) watcher.paused = command === 1;
-      this.areaState?.controlGroup?.(target, command);
-      this.advFollowState?.controlGroup?.(target, command);
-      this.logicState?.controlGroup?.(target, command);
-      this.gradientState?.controlGroup?.(target, command);
+      this.areaState?.controlGroup?.(target, command, controlMatch);
+      this.advFollowState?.controlGroup?.(target, command, controlMatch);
+      this.logicState?.controlGroup?.(target, command, controlMatch);
+      this.gradientState?.controlGroup?.(target, command, controlMatch);
       return;
     }
     this._activeMoveTweens = this._activeMoveTweens.filter(keepRunning);
     this._activeFollowTweens = this._activeFollowTweens.filter(keepRunning);
     if (this.keyframeState) this.keyframeState.active = this.keyframeState.active.filter(keepRunning);
     this._activeScaleTweens = this._activeScaleTweens.filter(keepRunning);
-    this.areaState?.stopGroup(target);
-    this.advFollowState?.stopGroup(target);
-    this.logicState?.stopGroup(target);
-    this.gradientState?.stopGroup(target);
+    this.areaState?.stopGroup(target, controlMatch);
+    this.advFollowState?.stopGroup(target, controlMatch);
+    this.logicState?.stopGroup(target, controlMatch);
+    this.gradientState?.stopGroup(target, controlMatch);
     if (this.cameraState) this.cameraState.tweens = this.cameraState.tweens.filter(keepRunning);
     this._activeAlphaTweens = this._activeAlphaTweens.filter(keepRunning);
     this._activeRotateTweens = this._activeRotateTweens.filter(keepRunning);
@@ -7348,6 +7361,7 @@ window.LevelObject = class LevelObject {
           col._baseRotationDegrees = col._eeInitialRotationDegrees;
           col._origRotationDegrees = col._eeInitialRotationDegrees;
         }
+        if (col._eeInitialOrbRotation !== undefined) col.orbRotation = col._eeInitialOrbRotation;
         if (col._initialSlopeGeometry) {
           Object.assign(col, col._initialSlopeGeometry);
           col.rotateSlope(0);
@@ -7801,7 +7815,7 @@ window.LevelObject = class LevelObject {
     // The level's collider list is already unique. Expanding every group
     // duplicates heavily grouped artwork before Set removes it again.
     const colliders = this.objects.filter(col => col._eeGroups?.length)
-      .map(col => [col, pick(col, ["x", "y", "rotationDegrees", "_baseX", "_baseY", "_baseRotationDegrees",
+      .map(col => [col, pick(col, ["x", "y", "rotationDegrees", "orbRotation", "_baseX", "_baseY", "_baseRotationDegrees",
         "_origBaseX", "_origBaseY", "_origRotationDegrees", "_eeMoveBaseX", "_eeMoveBaseY", "_eeDisabled",
         "hypoAx", "hypoAy", "hypoBx", "hypoBy", "rightAx", "rightAy", "slopeRotation", "w", "h", "shape", "circleMatrix", "_circleBaseRadius", "hitbox_radius",
         "_gdMotionFrame", "_gdPreviousX", "_gdPreviousY"])]);

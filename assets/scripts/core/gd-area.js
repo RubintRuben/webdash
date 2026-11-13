@@ -138,16 +138,16 @@
         inst.trans.push({ k, from: inst.v[k], to, t: 0, d: edit.duration, type: edit.inType, rate: edit.inRate });
       }
     }
-    stopGroup(group) {
+    stopGroup(group, matches = null) {
       let changed = false;
       for (const list of this.lists) for (let i = list.length - 1; i >= 0; i--) {
-        if (list[i].trig.groups?.includes(group)) { list.splice(i, 1); changed = true; }
+        if (matches ? matches(list[i].trig) : list[i].trig.groups?.includes(group)) { list.splice(i, 1); changed = true; }
       }
       if (changed) this._changed();
     }
-    controlGroup(group, command) {
+    controlGroup(group, command, matches = null) {
       for (const list of this.lists) for (const inst of list)
-        if (inst.trig.groups?.includes(group)) inst.paused = command === 1;
+        if (matches ? matches(inst.trig) : inst.trig.groups?.includes(group)) inst.paused = command === 1;
       this._changed();
     }
 
@@ -715,11 +715,11 @@
       this.active.push({ trig });
       this.active.sort((a, b) => b.trig.priority - a.trig.priority);
     }
-    stopGroup(group) {
-      this.active = this.active.filter(inst => !(inst.trig.groups?.includes(group) || inst.trig.target === group));
+    stopGroup(group, matches = null) {
+      this.active = this.active.filter(inst => !(matches ? matches(inst.trig) : inst.trig.groups?.includes(group) || inst.trig.target === group));
     }
-    controlGroup(group, command) {
-      for (const inst of this.active) if (inst.trig.groups?.includes(group) || inst.trig.target === group)
+    controlGroup(group, command, matches = null) {
+      for (const inst of this.active) if (matches ? matches(inst.trig) : inst.trig.groups?.includes(group) || inst.trig.target === group)
         inst.paused = command === 1;
     }
     _realPosition(obj, out) {

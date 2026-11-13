@@ -692,7 +692,6 @@ class PlayerObject {
   _markActivatedOrbSprites(gameObj) {
     if (!gameObj) return;
     this.reversePlayer(gameObj);
-    this._gameLayer?.logicState?.event("orbActivated");
     const objectId = Number.isInteger(gameObj._eeObjectId) ? gameObj._eeObjectId : -1;
     if (objectId >= 0) this._gameLayer.gdRenderer?.activateRing(this._gameLayer.gdObjects?.[objectId]);
     const targetY = typeof b === "function" ? b(gameObj.y) : gameObj.y;
@@ -3584,6 +3583,11 @@ if (this.p.isFlying || this.p.isUfo) {
       portal_wave: 30, portal_robot: 31, portal_spider: 32, portal_swing: 33 }[_0x49e81f?.type];
     if (portalEvent) this._gameLayer?.logicState?.event(portalEvent);
     if (portalEvent) this.p._modeChangeTime = (this._scene?._physicsFrame ?? 0) / 240;   // m_gameModeChangedTime
+    // Mode portals rebuild updateDashArt even when the mode stays the same.
+    // Its child RotateBy action restarts at zero (Orbit's cube portal in a dash).
+    if (portalEvent && this.p.isDashing) {
+      this._dashSpin = 0; this._dashSpinFirstTick = true; this._dashFireTime = 0;
+    }
     if (_0x49e81f?.noEffects || _0x49e81f?._eeLevelObject?.noEffects) return;
     const _0x4ed8ff = this._scene;
     const portalX = Number(_0x49e81f.portalX);
@@ -4216,7 +4220,10 @@ if (this.p.isFlying || this.p.isUfo) {
     if (this._dashSpinsIcon()) {
       const dir = this.p.gravityFlipped ? -1 : 1;
       const gravityMod = Number.isFinite(this.p.gravityMod) ? this.p.gravityMod : 1;
-      this._dashSpin = (this._dashSpin || 0) + (288 / 0.3) * (Math.PI / 180) * dir * gravityMod * dt;
+      // The native RotateBy action consumes its first positive tick at t=0.
+      // Counting that tick added four degrees to the angle left by a dash.
+      if (dt > 0 && this._dashSpinFirstTick) this._dashSpinFirstTick = false;
+      else this._dashSpin = (this._dashSpin || 0) + (288 / 0.3) * (Math.PI / 180) * dir * gravityMod * dt;
     } else {
       this._dashSpin = 0;
     }
@@ -4243,9 +4250,11 @@ if (this.p.isFlying || this.p.isUfo) {
     this.rotateActionActive = false;
     this._dashSpin = 0;
     this._dashFireTime = 0;
+    this._dashSpinFirstTick = true;
     this.updateDashRotation(0);
   }
   _stopDash(consumeHold = false) {
+    const wasDashing = this.p.isDashing;
     // stopDashing: the icon's spun angle becomes the player's rotation.
     if (this.p.isDashing && this._dashSpinsIcon()) this._rotation = this._dashSpin || 0;
     this._dashSpin = 0;
@@ -4254,10 +4263,14 @@ if (this.p.isFlying || this.p.isUfo) {
     this.p.dashXVelocity = 0;
     this.p.dashYVelocity = 0;
     this.p.yVelocity = 0;
+    // stopDashing 4f4e6e..4f4ea5 restarts the ball's forward roll. Leaving
+    // its action stopped also changes contact with oblique portal boxes.
+    if (wasDashing && this.p.isBall) this._runBallRotation();
     if (consumeHold) {
       this.p._holdDead = true;
       this.p.upKeyDown = false;
-      this.p.queuedHold = false;
+      // The S block clears only m_isHolding (31ce25..31ce2a). Its pass's
+      // buffered ring press survives and can activate a ring beside it.
       this.p.upKeyPressed = false;
       this.p._orbActivationConsumedForPress = true;
     }
@@ -5432,10 +5445,18 @@ if (this.p.isFlying || this.p.isUfo) {
     // (collisionCheckObjects 31f658..31f68e, pushButton 4f634e).
     const _ringCategory = _orbId === 1594 ? 'customUsed' : _orbId === 3027 ? 'teleportUsed' : 'consumed';
     const _flightRings = this.p.isFlying || this.p.isUfo || this.p.isWave;
-    const _pressReady = ctx.atPress ? (ctx.forcePress || justPressed) : (!_flightRings && this.p.queuedHold && this.p.upKeyDown);
-    const _needsClick = !ctx[_ringCategory] && (_ringCategory !== 'consumed' || !this.p._orbActivationConsumedForPress) && _pressReady;
+    // Native 0x991/0x992 retain this pass's ring press even when a preceding
+    // ordinary ring clears 0x98e. Custom/teleport categories can still fire.
+    if (!_flightRings && this.p.queuedHold && this.p.upKeyDown) ctx.bufferedPress = true;
+    const _pressReady = ctx.atPress ? (ctx.forcePress || justPressed) : (!_flightRings && ctx.bufferedPress);
+    const _needsClick = !ctx[_ringCategory] && (_ringCategory !== 'consumed' || !this.p._orbActivationConsumedForPress || (!ctx.atPress && ctx.bufferedPress)) && _pressReady;
     this.p.touchingRing = true;
     if (!this._isObjectActivated(gameObj) && _needsClick) {
+      this._gameLayer?.logicState?.event("orbActivated");
+      const event = ({36:34,141:35,1333:36,84:37,1022:38,1330:39,1594:40,1704:41,1751:42,3004:43,3027:44})[_orbId];
+      if (event) this._gameLayer?.logicState?.event(event);
+      const cached = this._nativeTouchedRings?.indexOf(gameObj) ?? -1;
+      if (cached >= 0) this._nativeTouchedRings.splice(cached, 1);
       this._orbpadHitEffect(gameObj, true);
       if (_isDash) {
         const dashHoldTicks = this._getDashHoldTicks(gameObj) + 1;
@@ -5590,7 +5611,9 @@ if (this.p.isFlying || this.p.isUfo) {
   // start of a tick moves the body on that same tick (native orb matrix,
   // 2026-10-27: cube, ship, UFO, ball, robot, spider and swing).
   ringJumpOnPress(forcePress = false) {
-    const rings = this._touchedRings;
+    // Native keeps the order in which rings first touched the player, not
+    // their authored order on every new pass (pushButton, 4f634e..4f6470).
+    const rings = this._nativeTouchedRings || this._touchedRings;
     if (!rings?.length || this.p.isDead || !(this.p.upKeyDown && (forcePress || !this.p.wasUpKeyDown))) return;
     const ctx = { consumed: false, customUsed: false, teleportUsed: false, atPress: true, forcePress, boosted: false, teleported: false, stop: false };
     const ordered = rings.filter(r => r?.orbId === 1594).concat(rings.filter(r => r?.orbId !== 1594));
@@ -5602,7 +5625,16 @@ if (this.p.isFlying || this.p.isUfo) {
     if (ctx.boosted && !this.p.onGround) this.p.jumpTrailActive = true;
     if (ctx.teleported) { this._lastCollisionWorldX = this._worldX(); this._lastCollisionWorldY = this.p.y; }
   }
+  finishRingContacts() {
+    // processCommands prunes missed rings after Options can push the held
+    // button (340d75..340d83). Keep the surviving contacts in their old order.
+    if (this._ringContactsThisPass && this._nativeTouchedRings)
+      this._nativeTouchedRings = this._nativeTouchedRings.filter(r => this._ringContactsThisPass.has(r));
+    this._ringContactsThisPass = null;
+  }
   checkCollisions(_0x2f5078) {
+    const skipFlyBounds = !!this.p._skipFlyBoundsOnce;
+    this.p._skipFlyBoundsOnce = false;
     this._groundColliderId = null;
     const previousMultiContacts=this._multiContacts || new Set();
     this._multiContacts=new Set();
@@ -5658,9 +5690,13 @@ if (this.p.isFlying || this.p.isUfo) {
     if (this._prevSlopeObj) potentialSlopes.add(this._prevSlopeObj);
     let _0x30410f = false;
     let _boostedThisStep = false;
+    this.finishRingContacts();
     this._touchedRings = [];
+    this._ringContactsThisPass = new Set();
+    this._nativeTouchedRings ||= [];
     let _teleportedThisStep = false;
-    let _orbInputConsumedThisStep = { consumed: false, customUsed: false, teleportUsed: false };
+    let _orbInputConsumedThisStep = { consumed: false, customUsed: false, teleportUsed: false,
+      bufferedPress: !!(this.p.queuedHold && this.p.upKeyDown) };
     let _touchingTeleportDuringRespawnIgnore = false;
     let seatedRamp = null;
     let scanNextGround = false;
@@ -5699,6 +5735,7 @@ if (this.p.isFlying || this.p.isUfo) {
       // A teleport portal moves the body but not m_lastPosition: a block met
       // at the exit is entered from the old side (native WHAT start: a cube
       // sent into a block bumps out under it).
+      const previousPassX=pieceWidth, cursor=contacts[contact]?._eeObjectId;
       pieceWidth=this._worldX();playersY=this.p.y;if(!keepLast)playersLastY=this.p.lastY;
       passRectHalf=this.p.isWave?(this.p.isMini?6:10):this._collisionHalfSize();
       // Modifier blocks at the exit apply to the rest of the pass (native
@@ -5708,7 +5745,12 @@ if (this.p.isFlying || this.p.isUfo) {
       // rows, pads beside its landing wait a tick: native MK2 X15198), and a
       // ramp met before it describes the departure rectangle.
       if (spiderJump) { seatedRamp = null; this._slopeContactThisTick = false; return; }
-      const destination=this._gameLayer.getNearbySectionObjects(pieceWidth,playersY).filter(o=>!listedContacts.has(o));
+      // A vertical teleport continues the same authored object cursor. Y
+      // culling can hide earlier objects from the initial query; discovering
+      // them at the exit must not revisit them (Orbit's preceding blue portal).
+      const movedX=Math.abs(pieceWidth-previousPassX)>1e-6;
+      const destination=this._gameLayer.getNearbySectionObjects(pieceWidth,playersY).filter(o=>!listedContacts.has(o)&&
+        (movedX||cursor===undefined||o._eeObjectId===undefined||o._eeObjectId>cursor));
       for(const o of destination){listedContacts.add(o);pendingContacts.add(o);}
       contacts.splice(contact+1,0,...destination.filter(o=>!deferredContact(o)));
       for(const o of destination)if(deferredContact(o))sortContact(o);
@@ -5884,6 +5926,7 @@ if (this.p.isFlying || this.p.isUfo) {
               this.p.y = targetY;
               this.p.lastY = targetY;
               this.p.lastGroundPosY = targetY;
+              this.p._skipFlyBoundsOnce = true;
               this._resetTeleportTrails();
               if (Math.abs(targetY - playersY) > 0.001) {
                 this.p.onGround = false;
@@ -6196,8 +6239,10 @@ if (this.p.isFlying || this.p.isUfo) {
         } else if (_colType === jumpRingType) {
           const _ringCtx = { ..._orbInputConsumedThisStep, boosted: false, teleported: false, stop: false };
           this._touchedRings.push(gameObj);
+          this._ringContactsThisPass.add(gameObj);
+          if (!this._nativeTouchedRings.includes(gameObj)) this._nativeTouchedRings.push(gameObj);
           this._handleRingContact(gameObj, _ringCtx);
-          _orbInputConsumedThisStep = { consumed: _ringCtx.consumed, customUsed: _ringCtx.customUsed, teleportUsed: _ringCtx.teleportUsed };
+          _orbInputConsumedThisStep = { consumed: _ringCtx.consumed, customUsed: _ringCtx.customUsed, teleportUsed: _ringCtx.teleportUsed, bufferedPress: _ringCtx.bufferedPress };
           if (_ringCtx.boosted) _boostedThisStep = true;
           if (_ringCtx.teleported) _teleportedThisStep = true;
           if (_ringCtx.teleported) { continueAfterTeleport(contact, gameObj.orbId === 3004); continue; }
@@ -6322,7 +6367,7 @@ if (this.p.isFlying || this.p.isUfo) {
     // The level floor/ceiling seat the dart by its 20 x 20 (mini 12) body, not
     // its 10 x 10 contact box: native normal dart rests at y 100, mini at 96.
     const _effectiveSize = this.p.isWave ? (this.p.isMini ? 12 : 20) : playerSize;
-    if (!_0x30410f && !_boostedThisStep) {
+    if (!_0x30410f && !_boostedThisStep && !(skipFlyBounds && !iscube)) {
       let gravCeilY = this._gameLayer.getCeilingY();
 
       if (!_0x30410f && !_boostedThisStep) {
@@ -6331,7 +6376,9 @@ if (this.p.isFlying || this.p.isUfo) {
         if (this.p.y < _0x3020c8 + _effectiveSize || _restSeatedOnFloor && this.p.y <= _0x3020c8 + _effectiveSize) {
           if (!this.p.gravityFlipped || !iscube) {
             this.p.y = _0x3020c8 + _effectiveSize;
-            this.hitGround();
+            // 31b412..31b441: a ship/swing moving out of the floor keeps
+            // its velocity and ground flag when the corridor clamps it.
+            if (!(this.p.isFlying || this.p.isSwing) || this.p.yVelocity <= 0) this.hitGround();
             if (this.p.gravityFlipped) this.p.onCeiling = true;
           } else {
             // checkCollisions 31b20d..31b3b1: an upside-down cube or robot
@@ -6385,9 +6432,9 @@ if (this.p.isFlying || this.p.isUfo) {
       }
     }
     let _0x496456 = this._gameLayer.getCeilingY();
-    if (!_teleportedThisStep && !_boostedThisStep && _0x496456 !== null && this.p.y >= _0x496456 - _effectiveSize && !iscube) {
+    if (!skipFlyBounds && !_teleportedThisStep && !_boostedThisStep && _0x496456 !== null && this.p.y >= _0x496456 - _effectiveSize && !iscube) {
       this.p.y = _0x496456 - _effectiveSize;
-      this.hitGround();
+      if (!(this.p.isFlying || this.p.isSwing) || this.p.yVelocity >= 0) this.hitGround();
       this.p.onCeiling = true;
     }
     const maximumY = (this._gameLayer.maxGameplayY ?? 5400) + (this.p.isMini ? 12 : 0);
@@ -6735,6 +6782,8 @@ if (this.p.isFlying || this.p.isUfo) {
   }
   reset() {
     this._blinkHidden=null;this._blinkStart=null;
+    this._touchedRings = this._nativeTouchedRings = this._ringContactsThisPass = null;
+    this.p._skipFlyBoundsOnce = false;
     this._cleanupExplosion();
     this._endAnimating = false;
     this._lastLandObject = null;
@@ -6745,6 +6794,7 @@ if (this.p.isFlying || this.p.isUfo) {
     this._rotation = 0;
     this.p._robotHold = false;
     this._dashSpin = 0;
+    this._dashSpinFirstTick = false;
     this._dashFireTime = 0;
     this.p._robotHoldTimer = 0;
     this._lastCameraX = 0;

@@ -221,6 +221,9 @@
       const r = trig.raw, scene = this.scene, level = this.level;
       const state = player?.p || scene?._state;
       if (!player || !state) return;
+      // teleportPlayer sets 0x560 even for a targetless launcher. The next
+      // collision pass consumes it before testing the flight corridor.
+      state._skipFlyBoundsOnce = true;
       const target = level._moveGroupParent(num(r[51]), true);
       // A Teleport trigger without a target still applies gravity and force
       // (teleportPlayer, 3161dc / 31658d). It is also a directional launcher.
@@ -559,11 +562,11 @@
       const v = Math.abs(speed) / 2;
       this.event(v < 3 ? "tinyLanding" : v < 6 ? "featherLanding" : v < 9 ? "softLanding" : v < 13 ? "normalLanding" : "hardLanding");
     }
-    stopGroup(group) {
-      this.eventLinks = this.eventLinks.filter(t => !t.groups?.includes(group));
+    stopGroup(group, matches = null) {
+      this.eventLinks = this.eventLinks.filter(t => !(matches ? matches(t) : t.groups?.includes(group)));
     }
-    controlGroup(group, command) {
-      for (const trig of this.eventLinks) if (trig.groups?.includes(group)) {
+    controlGroup(group, command, matches = null) {
+      for (const trig of this.eventLinks) if (matches ? matches(trig) : trig.groups?.includes(group)) {
         if (command === 1) this.pausedEventLinks.add(trig.uid); else this.pausedEventLinks.delete(trig.uid);
       }
     }
