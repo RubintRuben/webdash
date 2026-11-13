@@ -51,6 +51,7 @@ class PlayerState {
     this.collideBottom = 0;
     this.onCeiling = false;
     this.upKeyDown = false;
+    this._physicalJumpHeld = false;
     this.upKeyPressed = false;
     this.queuedHold = false;
     this._orbActivationConsumedForPress = false;
@@ -69,7 +70,11 @@ class PlayerState {
     this.isDual = false;
     this.ignorePortals = false;
     this._robotHold = false;
+    this._robotPadBoost = true;
     this._robotHoldTimer = 0;
+    this._robotHoverBudget = 0;
+    this._lastSpiderTeleportTime = -Infinity;
+    this._spiderLocalGravityFrame = -1;
     this._spiderTeleportNoclipDeathPending = false;
     this.ballShouldRotate = false;
     this.ballRotateOpposite = false;
@@ -4586,17 +4591,21 @@ if (this.p.isFlying || this.p.isUfo) {
   }
     _applySlopeJumpBoost() {
     if (window.slopeJumpBoost === false) return;
+    // updateJump (4e9f91): a remembered slope velocity is eligible only
+    // while touching a ramp or on the first tick after leaving it. Native
+    // keeps the velocity after some flat landings, with both flags clear.
+    if (!this._slopeRiding && !this._slopeContactThisTick) return;
     if (this._slopeExitVel === null || this._slopeExitVel === undefined) return;
     const base = this.p.yVelocity;
     if (!base) return;
     const dir = base >= 0 ? 1 : -1;
-    const contact = this._slopeLaunchVelocity(!this.p.isBall);
+    const contact = Math.fround(this._slopeLaunchVelocity(!this.p.isBall) / 2) * 2;
     if (contact * dir <= 0) return;
-    const cap = base * 1.4;
-    let v = base + contact * 0.25;
+    const cap = Math.fround(base / 2 * 1.4) * 2;
+    let v = gdQuantizeVelocity(base + Math.fround(contact / 2 * 0.25) * 2);
     if (dir > 0) { if (v > cap) v = cap; }
     else { if (v < cap) v = cap; }
-    this.p.yVelocity = v;
+    this.p.yVelocity = gdQuantizeVelocity(v);
   }
     _gravBaseForSpeed() {
     if (window.speedGravity === false) return p;
@@ -4910,6 +4919,9 @@ if (this.p.isFlying || this.p.isUfo) {
       this.p.yVelocity = this.flipMod() * this._groundJumpSpeed();
       this._applySlopeJumpBoost();
       this.p._robotHold = true;
+      this.p._robotPadBoost = false;
+      this.p.wasBoosted = true;
+      this._groundLatched = false;
       this.p._robotHoverBudget = 0;
       this._robotJumpFlameActive = true;
       this._robotJumpFlamePulse = 0;
@@ -4921,7 +4933,7 @@ if (this.p.isFlying || this.p.isUfo) {
     if (this.p.isJumping) {
       if (this.p._robotHold && !this.p.upKeyDown) this.p._robotHold = false;
       if (this.p._robotHold && (this.p._robotHoverBudget || 0) < 1.5) {
-        this.p._robotHoverBudget = (this.p._robotHoverBudget || 0) + dt / 10;
+        this.p._robotHoverBudget = (this.p._robotHoverBudget || 0) + Math.fround(dt * Math.fround(0.1));
       } else {
         this.p.yVelocity -= gravityStep * this.flipMod() * this._gm();
       }
@@ -5087,16 +5099,30 @@ if (this.p.isFlying || this.p.isUfo) {
       if (!(bounds.right < w0 || bounds.left > w1)) wide.push(c);
     }
     const pick = list => {
+      // spiderTestJumpInternal sorts by the rectangle edge, quantized to
+      // 0.1 GD points (4e4590/4e45f0), before resolving a slope's diagonal.
+      // CRT qsort's small partitions use selection sort: equal edges are
+      // intentionally not stable. A slope sharing a face with a thin block
+      // can be first even though its diagonal landing lies farther away.
+      const edge = c => Math.trunc(Math.fround(Math.fround((goingUp ? c.bounds.lower : c.bounds.upper) / 2 + 90) * (goingUp ? 10 : -10)));
+      const ordered = list.slice();
+      if (ordered.length <= 8) {
+        for (let end = ordered.length - 1; end > 0; end--) {
+          let largest = 0;
+          for (let i = 1; i <= end; i++) if (edge(ordered[i]) > edge(ordered[largest])) largest = i;
+          [ordered[largest], ordered[end]] = [ordered[end], ordered[largest]];
+        }
+      } else ordered.sort((a,b)=>edge(a)-edge(b));
       let best = null;
-      for (const c of list) {
+      for (const c of ordered) {
         if ((c.rest - fromY) * gs < -20) continue;
-        if (best && (c.rest - fromY) * gs >= (best.rest - fromY) * gs) continue;
         if (c.bounds.left > x) {
           const blocked = list.some(o => o !== c && !(x + half < o.bounds.left || o.bounds.right < x - half
             || c.rest + half < o.bounds.lower + 4 || o.bounds.upper - 4 < c.rest - half));
           if (blocked) continue;
         }
         best = c;
+        break;
       }
       return best ? best.rest : null;
     };
@@ -5131,6 +5157,8 @@ if (this.p.isFlying || this.p.isUfo) {
     const up = !this.p.gravityFlipped, oldY = this.p.y;
     const target = this._spiderTeleportTarget(up, x, size);
     this.flipGravity(up, 1);
+    this.p._spiderLocalGravityFrame = this._scene?._physicsFrame;
+    this.p._lastSpiderTeleportTime = (this._scene?._physicsFrame ?? 0) / 240;
     this.p.yVelocity = up ? 2 : -2;
     this.p.isJumping = false;
     this.p.y = target.y;
@@ -5194,6 +5222,7 @@ if (this.p.isFlying || this.p.isUfo) {
       const target = this._spiderTeleportTarget(goingUp, playerWorldX, playerSize);
       this.p.y = target.y;
       this.flipGravity(goingUp, 1.0);
+      this.p._lastSpiderTeleportTime = (this._scene?._physicsFrame ?? 0) / 240;
       this.p.onCeiling = goingUp;
       // spiderTestJumpInternal (Steam 4f3230..4f3246) leaves a speed of 1
       // toward the surface it reached.
@@ -5392,6 +5421,9 @@ if (this.p.isFlying || this.p.isUfo) {
   _handleRingContact(gameObj, ctx) {
     const _orbId = gameObj.orbId;
     const _isDash = (_orbId === 1704 || _orbId === 1751);
+    // ringJump (4f7083): an active dash ignores further rings, including
+    // another green dash ring. It must not flip gravity a second time.
+    if (this.p.isDashing) return;
     const justPressed = this.p.upKeyDown && !this.p.wasUpKeyDown;
     // ringJump keeps one used flag per press for custom rings, teleport orbs
     // and every other ring (Steam 4f709d..4f70ca). Collisions only fire rings
@@ -5400,7 +5432,7 @@ if (this.p.isFlying || this.p.isUfo) {
     // (collisionCheckObjects 31f658..31f68e, pushButton 4f634e).
     const _ringCategory = _orbId === 1594 ? 'customUsed' : _orbId === 3027 ? 'teleportUsed' : 'consumed';
     const _flightRings = this.p.isFlying || this.p.isUfo || this.p.isWave;
-    const _pressReady = ctx.atPress ? justPressed : (!_flightRings && this.p.queuedHold && this.p.upKeyDown);
+    const _pressReady = ctx.atPress ? (ctx.forcePress || justPressed) : (!_flightRings && this.p.queuedHold && this.p.upKeyDown);
     const _needsClick = !ctx[_ringCategory] && (_ringCategory !== 'consumed' || !this.p._orbActivationConsumedForPress) && _pressReady;
     this.p.touchingRing = true;
     if (!this._isObjectActivated(gameObj) && _needsClick) {
@@ -5459,7 +5491,6 @@ if (this.p.isFlying || this.p.isUfo) {
           if (this._padFacesDown(gameObj) !== this.p.gravityFlipped) this.flipGravity(!this.p.gravityFlipped, 1);
           this._teleportToOppositeSurface();
           if (!this.p.isFlying && !this.p.isUfo && !this.p.isWave && !this.p.isSwing && !this.p.isBall && !this.p.isSpider) this._rotation = this.p.gravityFlipped ? Math.PI : 0;
-          this._syncOtherDualGravityForBlueBoost();
           this.playGravityEffect(this.p.gravityFlipped);
           this._markActivatedOrbSprites(gameObj);
           // A teleport is no boost: a ramp met later in the same contact
@@ -5519,7 +5550,9 @@ if (this.p.isFlying || this.p.isUfo) {
           _orbVel = this._ringJumpSpeed(_orbId);
           _flipBefore = _orbId === 1022;
           _flipAfter = _orbId === 84;
-          this.p._robotHold = false;
+          // ringJump leaves the robot's pad latch and hover budget intact.
+          // A re-enabled held press can continue the unused part of a jump.
+          this.p._robotHold = this.p.isRobot && !this.p._robotPadBoost && this.p.upKeyDown;
           if (_orbId !== 1330) {
             this.p.isJumping = true;
             this.p.onGround = false;
@@ -5556,10 +5589,10 @@ if (this.p.isFlying || this.p.isUfo) {
   // collision pass touched, before this tick's movement: an orb pressed at the
   // start of a tick moves the body on that same tick (native orb matrix,
   // 2026-10-27: cube, ship, UFO, ball, robot, spider and swing).
-  ringJumpOnPress() {
+  ringJumpOnPress(forcePress = false) {
     const rings = this._touchedRings;
-    if (!rings?.length || this.p.isDead || !(this.p.upKeyDown && !this.p.wasUpKeyDown)) return;
-    const ctx = { consumed: false, customUsed: false, teleportUsed: false, atPress: true, boosted: false, teleported: false, stop: false };
+    if (!rings?.length || this.p.isDead || !(this.p.upKeyDown && (forcePress || !this.p.wasUpKeyDown))) return;
+    const ctx = { consumed: false, customUsed: false, teleportUsed: false, atPress: true, forcePress, boosted: false, teleported: false, stop: false };
     const ordered = rings.filter(r => r?.orbId === 1594).concat(rings.filter(r => r?.orbId !== 1594));
     for (const ring of ordered) {
       if (!ring || ring._eeDisabled) continue;
@@ -6078,7 +6111,6 @@ if (this.p.isFlying || this.p.isUfo) {
               // spiderTestJumpInternal leaves its speed of 1 toward the
               // surface (native MK2 X14735 row: vy 1).
               this._teleportToOppositeSurface();
-              this._syncOtherDualGravityForBlueBoost();
               this.playGravityEffect(this.p.gravityFlipped);
               this.p.onGround = false;
               this.p.canJump = false;
@@ -6119,6 +6151,7 @@ if (this.p.isFlying || this.p.isUfo) {
               }
               this.p.isJumping = true;
               this.p._robotHold = false;
+              this.p._robotPadBoost = true;
               this.p.onGround = false;
               this.p.canJump = false;
               this.p.yVelocity = _fm * _padVel;
@@ -6262,12 +6295,8 @@ if (this.p.isFlying || this.p.isUfo) {
       }
     }
     if (this._slopeContactThisTick && seatedRamp) {
-      // The level's ground (and a flipped player's ceiling) still bound the
-      // seat: a ramp that ends on the ground cannot push the player into it.
-      const floorY = this._gameLayer.getFloorY(), ceilY = this._gameLayer.getCeilingY();
-      const size = this.p.isWave ? (this.p.isMini ? 12 : 20) : playerSize;
-      if (!this.p.gravityFlipped && floorY !== null && floorY !== undefined && this.p.y < floorY + size) this.p.y = floorY + size;
-      if (this.p.gravityFlipped && ceilY !== null && ceilY !== undefined && this.p.y > ceilY - size) this.p.y = ceilY - size;
+      // A contacted ramp owns its seat even below the world floor. Native
+      // collisionCheckObjects skips that floor after a slope contact.
       if (this._groundColliderId === null) this.p.onCeiling = !seatedRamp.slopeSolidBelow;
       this._onSlopeAngle = this._activeSlopeAngle = this._prevSlopeAngle;
       this._activeSlopeObj = seatedRamp;
@@ -6356,7 +6385,7 @@ if (this.p.isFlying || this.p.isUfo) {
       }
     }
     let _0x496456 = this._gameLayer.getCeilingY();
-    if (!_teleportedThisStep && _0x496456 !== null && this.p.y >= _0x496456 - _effectiveSize && !iscube) {
+    if (!_teleportedThisStep && !_boostedThisStep && _0x496456 !== null && this.p.y >= _0x496456 - _effectiveSize && !iscube) {
       this.p.y = _0x496456 - _effectiveSize;
       this.hitGround();
       this.p.onCeiling = true;
@@ -6587,7 +6616,7 @@ if (this.p.isFlying || this.p.isUfo) {
       ...(this._spiderLayers || []),
       ...(this._robotLayers || [])
     ].filter(_0x3e9c62 => _0x3e9c62 && _0x3e9c62.sprite && _0x3e9c62.sprite.visible).map(_0x5cedeb => _0x5cedeb.sprite);
-    this._startPercent = (this._worldX() / this._scene._level.endXPos) * 100;
+    this._startPercent = this._scene._getCurrentPercent();
     this._particleEmitter.stop();
     this._flyParticleEmitter.stop();
     this._flyParticle2Emitter.stop();

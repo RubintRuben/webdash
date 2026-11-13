@@ -27,6 +27,7 @@ const decodeData = value => {
   return zlib.unzipSync(Buffer.from(raw.replace(/-/g,'+').replace(/_/g,'/'),'base64')).toString();
 };
 const sourceName = unescapeXML(nameXML);
+const verificationFrames = Number(source.match(/<(?:k|key)>k95<\/(?:k|key)>\s*<(?:i|integer)>(\d+)<\/(?:i|integer)>/)?.[1]) || 0;
 const decoded = decodeData(data);
 // A WHAT-sized source cannot itself fit in legacy localStorage, even once.
 // Keep two valid, bounded legacy levels while importing the complete file.
@@ -110,6 +111,7 @@ const hash = value => createHash('sha256').update(value).digest('hex');
         payloads: await Promise.all(records.map(level => window.CreatedLevelStore.loadData(level))) };
     });
     assert.equal(persisted.records.length, 3);
+    assert.equal(persisted.records[2].verificationFrames || 0, verificationFrames);
     assert.ok(persisted.listBytes < 10000);
     assert.deepEqual(persisted.payloads.map(hash), [hash(legacyData), hash(legacyData), hash(data)]);
     assert.ok(persisted.records.every(level => !level.levelString && level.levelDataKey));
@@ -135,12 +137,14 @@ const hash = value => createHash('sha256').update(value).digest('hex');
     const exported = fs.readFileSync(await download.path(), 'utf8');
     assert.ok(exported.includes('<s>' + nameXML + '</s>'));
     const exportedData=exported.match(/<k>k4<\/k>\s*<s>([\s\S]*?)<\/s>/)[1];
+    if (verificationFrames) assert.ok(exported.includes(`<k>k95</k><i>${verificationFrames}</i>`));
     // .gmd exports store the uncompressed, XML-escaped object string. Compare
     // the complete decoded payload, independent of compression or escaping.
     assert.equal(hash(decodeData(exportedData)), hash(decoded));
     console.log('PASS reload and export from IndexedDB');
     await click('GJ_playBtn2_001.png');
     await page.waitForFunction(count => !window.scene.get('GameScene')._menuActive && window.levelObjects?.length === count, sourceObjects, { timeout: 30000 });
+    assert.equal(await page.evaluate(()=>window.scene.get('GameScene')._level.verificationFrames),verificationFrames);
     await page.waitForTimeout(1500);
     const gameplay = await page.evaluate(() => {
       const s = window.scene.get('GameScene');

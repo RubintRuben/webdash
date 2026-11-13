@@ -4241,4 +4241,38 @@ test('ship and cube retain native sibling offsets through mini, gravity and turn
   near(ship.rotation,cube.rotation);near(Math.abs(cube.scaleX/ship.scaleX),.55);
  }
 });
+test('slope boosts require a current ride and use native velocity quantization',()=>{
+ const p=Object.create(context.testAPI.PlayerObject.prototype);p.p=new context.testAPI.PlayerState();
+ Object.assign(p,{_slopeRiding:false,_slopeContactThisTick:false,_slopeExitVel:6.446442127227783,
+  _slopeLaunch:6.446442127227783,_slopeContactTime:0,_slopeStepSeconds:1/240});
+ p.p.yVelocity=16.992;p._applySlopeJumpBoost();near(p.p.yVelocity,16.992);
+ p._slopeRiding=true;p.p.yVelocity=21.24;p._applySlopeJumpBoost();near(p.p.yVelocity,21.884);
+});
+test('a second green dash ring cannot flip an already dashing player',()=>{
+ const p=Object.create(context.testAPI.PlayerObject.prototype);p.p=new context.testAPI.PlayerState();
+ Object.assign(p.p,{isDashing:true,gravityFlipped:true,upKeyDown:true,queuedHold:true});
+ p._handleRingContact({orbId:1751},{});assert.equal(p.p.gravityFlipped,true);assert.equal(p.p.isDashing,true);
+});
+test('spider landing matches the native Zodiac ramp behind two equal-edge thin blocks',()=>{
+ const l=fixture(['1,468,2,34305,3,150.75,6,-180','1,468,2,34305,3,209.25',
+  '1,1338,2,34305,3,165,6,-90']);
+ const p=Object.create(context.testAPI.PlayerObject.prototype);
+ p.p=new context.testAPI.PlayerState();p.p.y=(163.5-90)*2;
+ p._gameLayer=l;p._spiderTeleportBand=()=>({floor:0,ceil:900});
+ const target=p._spiderTeleportTarget(true,34291.60546875*2,27);
+ // Captured after native spiderTestJump on frame 22592, without Noclip.
+ near(target.y/2+90,254.89453125,.0001);assert.equal(!!target.hazard,false);
+});
+test('reset clears spider contact grace and robot hover from the previous attempt',()=>{
+ const p=new context.testAPI.PlayerState();
+ Object.assign(p,{_lastSpiderTeleportTime:94,_spiderLocalGravityFrame:0,_robotHoverBudget:1.4,_robotPadBoost:false});
+ p.reset();assert.equal(p._lastSpiderTeleportTime,-Infinity);assert.equal(p._spiderLocalGravityFrame,-1);
+ assert.equal(p._robotHoverBudget,0);assert.equal(p._robotPadBoost,true);
+});
+test('saved verification ticks give Zodiac its native 48.52 percent independently of X',()=>{
+ const percent=context.gdLevelPercent(22646,46671,68757.4453125,144113.2);
+ near(percent,48.52263641357422);assert.equal(percent.toFixed(2),'48.52');
+ near(context.gdLevelPercent(2400,17668,5023.12841796875,37078),13.583880424499512);
+ near(context.gdLevelPercent(50,0,200,1000),20);
+});
 console.log(passes + ' regression tests passed.');

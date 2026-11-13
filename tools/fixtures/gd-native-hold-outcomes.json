@@ -1,0 +1,27 @@
+{
+  "reference": "Vanilla Steam Geometry Dash, 240 Hz; one held press from the beginning, no Noclip",
+  "exeSha256": "4EEE06D5C2E2213B4BA2B1F6233DD426BBDD0E9B29D7C375E499516B6F8F69D5",
+  "samples": [
+    {
+      "name": "HELIOPOSSIBLE hOlD",
+      "decodedSha256": "4f2ae4fa49c61208627ec96708b6dbd5261dd41e21729973501e63858a7c9057",
+      "verificationFrames": 17668,
+      "frame": 17426,
+      "won": true,
+      "dead": false,
+      "x": 18239.2578125,
+      "y": 609
+    },
+    {
+      "name": "Zodiac hold",
+      "decodedSha256": "eb1e881724ace4c3f51e1051657f008da47aab5bd04ba9413c70fa2709a1b485",
+      "verificationFrames": 46671,
+      "frame": 22646,
+      "won": false,
+      "dead": true,
+      "x": 34378.72265625,
+      "y": 220.85702514648438,
+      "percent": 48.52263641357422
+    }
+  ]
+}

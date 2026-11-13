@@ -24,20 +24,26 @@ window.getGdApiUrl = function (path) {
   if (!base) return null;
   return `${base}${path.startsWith("/") ? "" : "/"}${path}`;
 };
-async function fetchGdRoute(url, options, timeoutMs) {
+async function fetchGdRoute(url, options, timeoutMs, nativeOnly = false) {
   const connection = new AbortController();
   const timer = setTimeout(() => connection.abort(), timeoutMs);
   const signal = options.signal ? AbortSignal.any([options.signal, connection.signal]) : connection.signal;
-  try { return await fetch(url, { ...options, signal }); }
+  try { return await (nativeOnly && window._gdNativeFetch || fetch)(url, { ...options, signal }); }
   finally { clearTimeout(timer); }
 }
-// Try browser-accessible routes before waking a cold hosting instance. A
-// hosting-network denial only disables that route, not independent relays.
+// Each API route owns its timeout and circuit breaker. Do not nest the old
+// four-worker fetch wrapper inside one 12-second timeout: its first stalled
+// worker used to cancel every subsequent attempt, including healthy routes.
+const gdApiRouteFailures = new Map();
 window.fetchGdApi = async function (path, options = {}) {
+  const suffix = '/' + path.replace(/^\//, '');
+  const relay = window.WEBDASH_GD_RELAY_BASE?.replace(/\/$/, '');
+  const relayUrl = relay ? relay + suffix : null;
   const directUrl = window.useDirectInternet ? window.getGdApiUrl(path) : null;
   const proxyBase = (window._gdProxyUrl || "").replace(/\/$/, "");
   const proxyUrl = proxyBase ? `${proxyBase}${path.startsWith("/") ? "" : "/"}${path}` : null;
-  const urls = [...new Set([directUrl, proxyUrl].filter(Boolean))];
+  const legacy = (window._gdProxyHosts || []).map(base => base + suffix);
+  const urls = [...new Set([relayUrl, directUrl, proxyUrl, ...legacy].filter(Boolean))];
   const backend = window.getGdBackendBase?.();
   const backendUrl = backend && /^\/?(getGJLevels21|downloadGJLevel22|getGJSongInfo)\.php$/.test(path)
     && !(window._gdBackendDeniedUntil > Date.now()) ? backend + '/gd-api/' + path.replace(/^\//, '') : null;
@@ -45,14 +51,17 @@ window.fetchGdApi = async function (path, options = {}) {
   let lastError = null;
   for (const url of urls) {
     if (options.signal?.aborted) throw options.signal.reason || new DOMException('Aborted', 'AbortError');
+    const route = new URL(url).origin;
+    if ((gdApiRouteFailures.get(route) || 0) > Date.now()) continue;
     if (url === backendUrl) {
       try { if (!await window.ensureGdBackend(options.signal)) continue; }
       catch (error) { if (options.signal?.aborted) throw error; lastError = error; continue; }
     }
     try {
       const response = await fetchGdRoute(url, { ...options,
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded', ...options.headers } }, url === backendUrl ? 65000 : 12000);
-      if (response.ok) return response;
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', ...options.headers } }, url === backendUrl ? 65000 : 20000, true);
+      if (response.ok) { gdApiRouteFailures.delete(route); return response; }
+      gdApiRouteFailures.set(route, Date.now() + (response.status === 429 ? 300000 : 60000));
       lastError = new Error(`HTTP ${response.status}`);
       if (response.headers.get('X-WebDash-Upstream-Error') === 'GDNetworkDenied:1005') {
         window._gdBackendDeniedUntil = Date.now() + 300000;
@@ -61,6 +70,7 @@ window.fetchGdApi = async function (path, options = {}) {
       }
     } catch (error) {
       if (options.signal?.aborted) throw error;
+      gdApiRouteFailures.set(route, Date.now() + (url === directUrl ? 300000 : 60000));
       lastError = error;
     }
   }
@@ -116,6 +126,14 @@ window.fetchGdSongAudio = async function (songId, options = {}) {
   if (index < 0 || !fields[index + 1]) throw new Error('Song audio URL unavailable');
   return window.fetchGdAudio(decodeURIComponent(fields[index + 1]), options);
 };
+// PlayLayer::getCurrentPercent (Steam 512300) uses the saved verification
+// tick count (GMD k95 / API 57) when present, including speed changes.
+function gdLevelPercent(progressTicks, verificationFrames, worldX, endX) {
+  const value = verificationFrames > 0
+    ? Math.fround(Math.fround(Math.fround(progressTicks) / Math.fround(verificationFrames)) * 100)
+    : endX > 0 ? worldX / endX * 100 : 0;
+  return Math.min(100, Math.max(0, value));
+}
 window.currentlevel = [
 	"stereo_madness", // internal level name
 	"Stereo Madness", // proper level name

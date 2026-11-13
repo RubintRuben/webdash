@@ -42,7 +42,7 @@ await cold.evaluate(()=>window.__waking);console.log('PASS cold server connects 
 const progress=await cold.evaluate(async()=>{GDDownloads.plan(['sfx:1','sfx:2']);GDDownloads.begin('sfx:1');const bytes=await readGdAudioResponse(new Response(new Uint8Array(4096),{headers:{'Content-Length':'4096'}}),'sfx:1');GDDownloads.finish('sfx:1');return {length:bytes.byteLength,rows:GDDownloads.assets,text:document.getElementById('gd-download-progress').textContent};});
 assert.equal(progress.length,4096);assert.equal(progress.rows.length,2);assert.match(progress.text,/SFX: 1\/2/);console.log('PASS SFX download progress counts all queued sounds and streamed bytes');
 await cold.close();
-await p.evaluate(()=>{window.useDirectInternet=false;window._gdProxyUrl='';});
+await p.evaluate(()=>{window.useDirectInternet=false;window._gdProxyUrl='';window._gdProxyHosts=[];window.WEBDASH_GD_RELAY_BASE='';});
 await p.route('https://fetchsongid.lasokar.workers.dev/**',r=>r.fulfill({status:404,body:'Unavailable'}));
 const requests=[];
 await p.route('**/gd-api/getGJSongInfo.php',route=>{requests.push('metadata');return route.fulfill({contentType:'text/plain',body:'1~|~999991~|~10~|~https%3A%2F%2Faudio.ngfiles.com%2Fsongs%2Fqa-song.mp3'});});

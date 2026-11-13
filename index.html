@@ -6,10 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Web Dashers</title>
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
-    <link rel="stylesheet" href="assets/style.css?v=20261112-fidelity-round3">
-    <link rel="stylesheet" href="assets/download-status.css?v=20261112-fidelity-round3">
-    <script src="assets/scripts/utils/hosting-config.js?v=20261112-fidelity-round3"></script>
-    <script src="assets/scripts/utils/download-status.js?v=20261112-fidelity-round3"></script>
+    <link rel="stylesheet" href="assets/style.css?v=20261113-fidelity-round4">
+    <link rel="stylesheet" href="assets/download-status.css?v=20261113-fidelity-round4">
+    <script src="assets/scripts/utils/hosting-config.js?v=20261113-fidelity-round4"></script>
+    <script src="assets/scripts/utils/download-status.js?v=20261113-fidelity-round4"></script>
     <meta name="description" content="Web Dashers is a fan-made browser mod of the Geometry Dash Web Demo. It features the main levels, a built-in level creator, and a level search to play online levels. The project is actively in development, with more features and updates planned.">
     <meta name="theme-color" content="#C1FB3D">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
@@ -37,7 +37,7 @@
     <script src="assets/scripts/libs/phaser.min.js"></script>
     <script src="assets/scripts/libs/pako.min.js"></script>
     <script>
-        window.WEBDASH_BUILD = new URLSearchParams(window.location.search).get("build") || "direct-20261112-fidelity-round3-wave-slopes";
+        window.WEBDASH_BUILD = new URLSearchParams(window.location.search).get("build") || "direct-20261113-fidelity-round4-hold-relay";
         // Development aid: ?devraf=1 keeps the game loop running in a hidden
         // (non-painted) browser view where requestAnimationFrame is paused.
         if (new URLSearchParams(window.location.search).get("devraf") === "1") {
@@ -45,10 +45,10 @@
             window.cancelAnimationFrame = function (id) { clearTimeout(id); };
         }
     </script>
-    <script src="assets/scripts/utils/cache-manager.js?v=20261112-fidelity-round3"></script>
+    <script src="assets/scripts/utils/cache-manager.js?v=20261113-fidelity-round4"></script>
     <script src="assets/scripts/api/GDapiWrapper.js"></script>
-    <script src="assets/scripts/utils/api-config.js?v=20261112-fidelity-round3"></script>
-    <script src="assets/scripts/utils/created-level-store.js?v=20261112-fidelity-round3"></script>
+    <script src="assets/scripts/utils/api-config.js?v=20261113-fidelity-round4"></script>
+    <script src="assets/scripts/utils/created-level-store.js?v=20261113-fidelity-round4"></script>
     <script src="assets/scripts/api/account-api.js?v=20260916-4"></script>
     <!-- workerssdsss nwo-->
     <script>
@@ -66,6 +66,7 @@
             window._gdProxyHosts = GD_PROXY_HOSTS;
             var activeIndex = 0;
             var nativeFetch = window.fetch.bind(window);
+            window._gdNativeFetch = nativeFetch;
             function matchingHost(url) {
                 for (var i = 0; i < GD_PROXY_HOSTS.length; i++) {
                     var host = GD_PROXY_HOSTS[i];
@@ -122,30 +123,30 @@
             };
         })();
     </script>
-    <script defer src="assets/scripts/utils/config.js?v=20261112-fidelity-round3"></script>
+    <script defer src="assets/scripts/utils/config.js?v=20261113-fidelity-round4"></script>
     <script defer src="assets/scripts/game/gd-objects.js?v=20261027-3"></script>
-    <script defer src="assets/scripts/core/triggers.js?v=20261112-fidelity-round3"></script>
+    <script defer src="assets/scripts/core/triggers.js?v=20261113-fidelity-round4"></script>
     <script defer src="assets/scripts/game/gd-effect-presets.js?v=20261109-2"></script>
-    <script defer src="assets/scripts/core/gd-particles.js?v=20261112-fidelity-round3"></script>
+    <script defer src="assets/scripts/core/gd-particles.js?v=20261113-fidelity-round4"></script>
     <script defer src="assets/scripts/game/gd-native-shader.js?v=20261020-4"></script>
-    <script defer src="assets/scripts/core/gd-shaders.js?v=20261112-fidelity-round3"></script>
-    <script defer src="assets/scripts/core/gd-camera.js?v=20261112-fidelity-round3"></script>
-    <script defer src="assets/scripts/core/gd-gameplay.js?v=20261112-fidelity-round3"></script>
-    <script defer src="assets/scripts/core/gd-logic.js?v=20261112-fidelity-round3"></script>
-    <script defer src="assets/scripts/core/gd-keyframes.js?v=20261112-fidelity-round3"></script>
-    <script defer src="assets/scripts/core/gd-area.js?v=20261112-fidelity-round3"></script>
-    <script defer src="assets/scripts/core/gd-render.js?v=20261112-fidelity-round3"></script>
-    <script defer src="assets/scripts/core/gd-gradients.js?v=20261112-fidelity-round3"></script>
-    <script defer src="assets/scripts/core/level.js?v=20261112-fidelity-round3"></script>
-    <script defer src="assets/scripts/core/player.js?v=20261112-fidelity-round3"></script>
-    <script defer src="assets/scripts/core/gd-audio.js?v=20261112-fidelity-round3"></script>
-    <script defer src="assets/scripts/core/audio.js?v=20261112-fidelity-round3"></script>
-    <script defer src="assets/scripts/core/loading-screen.js?v=20261112-fidelity-round3"></script>
-    <script defer src="assets/scripts/core/level-editor.js?v=20261112-fidelity-round3"></script>
-    <script defer src="assets/scripts/core/game-scene.js?v=20261112-fidelity-round3"></script>
+    <script defer src="assets/scripts/core/gd-shaders.js?v=20261113-fidelity-round4"></script>
+    <script defer src="assets/scripts/core/gd-camera.js?v=20261113-fidelity-round4"></script>
+    <script defer src="assets/scripts/core/gd-gameplay.js?v=20261113-fidelity-round4"></script>
+    <script defer src="assets/scripts/core/gd-logic.js?v=20261113-fidelity-round4"></script>
+    <script defer src="assets/scripts/core/gd-keyframes.js?v=20261113-fidelity-round4"></script>
+    <script defer src="assets/scripts/core/gd-area.js?v=20261113-fidelity-round4"></script>
+    <script defer src="assets/scripts/core/gd-render.js?v=20261113-fidelity-round4"></script>
+    <script defer src="assets/scripts/core/gd-gradients.js?v=20261113-fidelity-round4"></script>
+    <script defer src="assets/scripts/core/level.js?v=20261113-fidelity-round4"></script>
+    <script defer src="assets/scripts/core/player.js?v=20261113-fidelity-round4"></script>
+    <script defer src="assets/scripts/core/gd-audio.js?v=20261113-fidelity-round4"></script>
+    <script defer src="assets/scripts/core/audio.js?v=20261113-fidelity-round4"></script>
+    <script defer src="assets/scripts/core/loading-screen.js?v=20261113-fidelity-round4"></script>
+    <script defer src="assets/scripts/core/level-editor.js?v=20261113-fidelity-round4"></script>
+    <script defer src="assets/scripts/core/game-scene.js?v=20261113-fidelity-round4"></script>
     <link rel="stylesheet" href="assets/eclipse.css?v=20261109-3">
-    <script defer src="assets/scripts/core/gd-hacks.js?v=20261112-fidelity-round3"></script>
-    <script defer src="assets/scripts/core/main.js?v=20261112-fidelity-round3"></script>
+    <script defer src="assets/scripts/core/gd-hacks.js?v=20261113-fidelity-round4"></script>
+    <script defer src="assets/scripts/core/main.js?v=20261113-fidelity-round4"></script>
     <script>
         new ResizeObserver(() => {
             window.dispatchEvent(new Event('resize'));

@@ -11,6 +11,10 @@ import urllib.parse
 root = Path(__file__).resolve().parent.parent
 out = root / 'dist'
 api = os.environ.get('WEBDASH_API_BASE', '').strip()
+relay = os.environ.get('WEBDASH_GD_RELAY_BASE', 'https://webdash-gd-read-relay.peakednote2.chatgpt.site').strip().rstrip('/')
+relay_url = urllib.parse.urlsplit(relay)
+if relay and (relay_url.scheme != 'https' or not relay_url.hostname or relay_url.username or relay_url.password or relay_url.path or relay_url.query or relay_url.fragment):
+    raise SystemExit('WEBDASH_GD_RELAY_BASE must be an HTTPS service origin')
 if os.environ.get('RENDER') == 'true' and not api:
     raise SystemExit('Set WEBDASH_API_BASE to the backend public URL before building the static site')
 if api and not api.startswith(('http://', 'https://')):
@@ -28,7 +32,7 @@ out.mkdir(exist_ok=True)
 shutil.copyfile(root / 'index.html', out / 'index.html')
 shutil.copytree(root / 'assets', out / 'assets', dirs_exist_ok=True)
 (out / 'assets/scripts/utils/hosting-config.js').write_text(
-    'window.WEBDASH_API_BASE = ' + json.dumps(api) + ';\n', encoding='utf-8')
+    'window.WEBDASH_API_BASE = ' + json.dumps(api) + ';\nwindow.WEBDASH_GD_RELAY_BASE = ' + json.dumps(relay) + ';\n', encoding='utf-8')
 # Some CDN paths retain old assets despite a changed query string. Give
 # each entry script/style an immutable URL derived from its actual bytes.
 # Keep the original paths for dynamic resource lookups and local development.

@@ -60,6 +60,8 @@ class PracticeMode {
       ballNormalRotate: playerState.ballNormalRotate,
       ballHitPad: playerState.ballHitPad,
       robotHold: !!playerState._robotHold,
+      robotPadBoost: !!playerState._robotPadBoost,
+      robotHoverBudget: playerState._robotHoverBudget || 0,
       robotHoldTimer: playerState._robotHoldTimer || 0,
       cameraX: cameraX,
       cameraFloorX: scene._cameraFloorX ?? -Infinity,
@@ -469,6 +471,8 @@ class GameScene extends Phaser.Scene {
     if (_0x591888) {
       this._level.loadLevel(_0x591888);
     }
+    this._level.verificationFrames = window._onlineLevelMetadata?.id === window.currentlevel[2]
+      ? Number(window._onlineLevelMetadata.verificationFrames) || 0 : 0;
     const _resolveGdArtId = (key, fallback = 1) => {
       const raw = window.settingsMap?.[key];
       const parsed = parseInt(raw ?? fallback, 10);
@@ -1178,6 +1182,7 @@ this._menuFsBtn = this.add.image(33, 33, "GJ_WebSheet", _0x28fa5b ? "toggleFulls
         const offset       = parseFloat(m["45"] || "0") || 0;
 
         window._onlineLevelId    = "online_" + lvl.id;
+        window._onlineLevelMetadata = {id:window._onlineLevelId, verificationFrames:Number(m['57']) || 0};
         window._onlineLevelString = levelString;
         window._onlineLevelName   = lvl.name || "Online Level";
         window._onlineSongOffset  = offset;
@@ -1254,6 +1259,7 @@ this._menuFsBtn = this.add.image(33, 33, "GJ_WebSheet", _0x28fa5b ? "toggleFulls
           songId: songId,
           levelId: lvl.id,
           levelString: levelString,
+          verificationFrames: Number(m['57']) || 0,
           levelLength: lvl.length || 0,
           normalBest: 0,
           practiceBest: 0,
@@ -1515,6 +1521,7 @@ this._menuFsBtn = this.add.image(33, 33, "GJ_WebSheet", _0x28fa5b ? "toggleFulls
                         if (k === "k1") extracted.id = val;
                         if (k === "k23") extracted.length = parseInt(val) || 0;
                         if (k === "k16") extracted.version = parseInt(val) || 1;
+                        if (k === "k95") extracted.verificationFrames = Number(val) || 0;
                         if (k === "k8") extracted.officialSongId = parseInt(val) || 0;
                         if (k === "k45") extracted.customSongId = parseInt(val) || 0;
                         if (k === "k3") {
@@ -1549,6 +1556,7 @@ this._menuFsBtn = this.add.image(33, 33, "GJ_WebSheet", _0x28fa5b ? "toggleFulls
                         levelId: (extracted.id === "0" || !extracted.id) ? "NA" : extracted.id,
                         levelString: extracted.data, 
                         levelLength: extracted.length,
+                        verificationFrames: extracted.verificationFrames || 0,
                         normalBest: 0,
                         practiceBest: 0,
                         description: extracted.desc || "",
@@ -1632,6 +1640,7 @@ this._menuFsBtn = this.add.image(33, 33, "GJ_WebSheet", _0x28fa5b ? "toggleFulls
         xml += `<k>k8</k><i>${officialSong - 1}</i>`;
         xml += `<k>k45</k><i>${customSong}</i>`;
         xml += `<k>k16</k><i>${level.version || 1}</i>`;
+        if (level.verificationFrames > 0) xml += `<k>k95</k><i>${Math.round(level.verificationFrames)}</i>`;
         xml += `<k>k18</k><i>${level.levelLength || 0}</i>`;
         xml += `<k>k23</k><i>${level.levelLength || 0}</i>`;
         xml += '<k>k13</k><t/>';
@@ -1880,6 +1889,7 @@ this._menuFsBtn = this.add.image(33, 33, "GJ_WebSheet", _0x28fa5b ? "toggleFulls
         window._onlineLevelString = levelString;
         window._onlineLevelName = level.levelName;
         window._onlineLevelId = level.createdId;
+        window._onlineLevelMetadata = {id:level.createdId, verificationFrames:Number(level.verificationFrames) || 0};
         if (!isEditor) {
           window._createdLevelReturnToView = {
             createdId: level.createdId,
@@ -7234,6 +7244,10 @@ _showwippopup() {
       // Touch triggers listen to the button; Options can disable the player.
       const logic = this._level?.logicState;
       if (!this._logicButtonDown) { this._logicButtonDown = true; logic?.button(true, 1); }
+      if (!onlyPlayer) {
+        this._state._physicalJumpHeld = true;
+        if (this._isDual && !this._isTwoPlayerMode()) this._state2._physicalJumpHeld = true;
+      }
       const primaryEnabled = onlyPlayer !== 2 && !logic?.controlsDisabled(1);
       const secondaryEnabled = onlyPlayer !== 1 && this._isDual && !this._state2.isDead && !this._isTwoPlayerMode() && !logic?.controlsDisabled(2);
       if (!primaryEnabled && !secondaryEnabled) return;
@@ -7258,6 +7272,7 @@ _showwippopup() {
       const restoreInputFrame = !this._localPhysicsActive ? this._level?.gameplayState?.enterPhysics() : null;
       try {
         const _dualImmediateBeforeGravity = !!this._state.gravityFlipped;
+        if (primaryEnabled) this._player.ringJumpOnPress(true);
         if (primaryEnabled && !this._state.isFlying && !this._state.isWave && !this._state.isUfo && this._state.canJump && !this._player._pressGoesToTouchedRings()) {
           // pushButton's immediate updateJump(0) skips ship, UFO, wave and
           // swing (Steam 4f62e3..4f6319); their press acts on the next tick.
@@ -7280,6 +7295,7 @@ _showwippopup() {
           const _secondaryImmediateBeforeGravity = !!this._state2.gravityFlipped;
           const _secondaryImmediateBallInput = this._state2.isBall && this._state2.upKeyPressed;
           const _secondaryImmediateSpiderInput = this._state2.isSpider && this._state2.upKeyPressed;
+          this._player2.ringJumpOnPress(true);
           if (!this._state2.isFlying && !this._state2.isWave && !this._state2.isUfo && this._state2.canJump && !this._player2._pressGoesToTouchedRings()) {
             this._player2.updateJump(0);
           }
@@ -7310,6 +7326,14 @@ _showwippopup() {
     if (disabled) {
       state.upKeyDown = state.upKeyPressed = state.queuedHold = false;
       state._orbActivationConsumedForPress = false;
+      // disablePlayerControls (4fd7d7): release the robot's variable jump
+      // and end any dash, while preserving the physical button map.
+      state._robotPadBoost = true;
+      state._robotHold = false;
+      const player = index === 2 ? this._player2 : this._player;
+      if (state.isDashing) player._stopDash(true);
+    } else if (!state._physicalJumpHeld) {
+      return;
     } else if (index === 2 && this._isTwoPlayerMode()) {
       if (this._logicButtonDown2) this._pushSecondPlayerButton();
     } else if (this._logicButtonDown) {
@@ -7327,12 +7351,16 @@ _showwippopup() {
     if (this._logicButtonDown) { this._logicButtonDown = false; this._level?.logicState?.button(false, 1); }
     this._state._holdDead = false;
     this._state.upKeyDown = false;
+    this._state._physicalJumpHeld = false;
+    this._state._robotPadBoost = true;
     this._state.upKeyPressed = false;
     this._state.queuedHold = false;
     this._state._orbActivationConsumedForPress = false;
     if (!this._isTwoPlayerMode()) {
     this._state2._holdDead = false;
     this._state2.upKeyDown = false;
+    this._state2._physicalJumpHeld = false;
+    this._state2._robotPadBoost = true;
     this._state2.upKeyPressed = false;
     this._state2.queuedHold = false;
     this._state2._orbActivationConsumedForPress = false;
@@ -7342,12 +7370,14 @@ _showwippopup() {
     if (!this._isTwoPlayerMode() || !this._isDual || this._state2.isDead || this._paused || this._menuActive || this._slideIn || this._levelWon) return;
     const logic=this._level?.logicState, state=this._state2, player=this._player2;
     if (!this._logicButtonDown2) { this._logicButtonDown2=true;logic?.button(true,2); }
+    state._physicalJumpHeld=true;
     if (logic?.controlsDisabled(2)) return;
     if(window.jumpHack)state.onGround=state.canJump=true;
     this._pressUnseen2=true;this._releaseDeferred2=false;
     state._holdDead=false;state.upKeyDown=state.upKeyPressed=state.queuedHold=true;state._orbActivationConsumedForPress=false;
     const restore=!this._localPhysicsActive?this._level?.gameplayState?.enterPhysics():null;
     try {
+      player.ringJumpOnPress(true);
       if (!state.isFlying&&!state.isWave&&!state.isUfo&&state.canJump&&!player._pressGoesToTouchedRings()) player.updateJump(0);
     } finally {restore?.();}
   }
@@ -7356,6 +7386,8 @@ _showwippopup() {
     this._releaseDeferred2=false;
     if(this._logicButtonDown2){this._logicButtonDown2=false;this._level?.logicState?.button(false,2);}
     const state=this._state2;
+    state._physicalJumpHeld=false;
+    state._robotPadBoost=true;
     state._holdDead=false;state.upKeyDown=state.upKeyPressed=state.queuedHold=false;state._orbActivationConsumedForPress=false;
   }
   _initMacroBot() {
@@ -8523,6 +8555,7 @@ _showwippopup() {
     this._startPosEffectTime=seconds;
   }
   _resetGameplayState() {
+    this._startPosEffectTime = 0;
     this._pauseResumeTimer?.remove();this._pauseResumeTimer=null;
     this._pressUnseen=false;this._releaseDeferred=false;this._logicButtonDown=false;
     this._jumpEventQueue=[];this._jumpEventHeld={};
@@ -8887,6 +8920,8 @@ _showwippopup() {
     this._state.ballNormalRotate = checkpoint.ballNormalRotate || 1;
     this._state.ballHitPad = checkpoint.ballHitPad || false;
     this._state._robotHold = !!checkpoint.robotHold;
+    this._state._robotPadBoost = !!checkpoint.robotPadBoost;
+    this._state._robotHoverBudget = checkpoint.robotHoverBudget || 0;
     this._state._robotHoldTimer = checkpoint.robotHoldTimer || 0;
 
     const checkpointRotation = Number.isFinite(Number(checkpoint.rotation)) ? Number(checkpoint.rotation) : 0;
@@ -9324,6 +9359,10 @@ _showwippopup() {
       y: Math.sin(phase * 2.47 + 1.3) * amplitude
     };
   }
+  _getCurrentPercent() {
+    return gdLevelPercent((this._physicsFrame || 0) + Math.round((this._startPosEffectTime || 0) * 240),
+      this._level.verificationFrames, this._playerWorldX, this._level.endXPos);
+  }
   update(_0x54fa47, deltaTime) {
     this._pauseContainer?.setVisible(!window.hidePauseMenu);
     if (this._waitingForLevelMusic) {
@@ -9392,7 +9431,7 @@ _showwippopup() {
           this._autoClickTick=(this._autoClickTick||0)+1;
         }else if(this._autoClickDown){this._releaseButton();this._releaseSecondPlayerButton();this._autoClickDown=false;this._autoClickTick=0;}
         this._updateSimulationStep(_0x54fa47 - this._simulationBufferMs, tick * Math.min(1, timeWarp));
-        if(window.autoKill){const cfg=window.GDHacks?.state||{},percent=this._level.endXPos>0?100*this._playerWorldX/this._level.endXPos:0;
+        if(window.autoKill){const cfg=window.GDHacks?.state||{},percent=this._getCurrentPercent();
           if((cfg.autoKillPercentageEnabled!==false&&percent>=(cfg.autoKillPercentage??50))||
             (cfg.autoKillTimeEnabled&&this._playTime>=(cfg.autoKillTime??90)))this._player.killPlayer(true);
         }
@@ -9455,7 +9494,7 @@ _showwippopup() {
 
     // HUD text only changes what is drawn: once per frame.
     if (this._visualTick !== false) {
-      let rawPercent = (this._playerWorldX / this._level.endXPos) * 100;
+      let rawPercent = this._getCurrentPercent();
       rawPercent = Math.min(100, Math.max(0, rawPercent));
       let displayValue;
       if (this._levelWon) {
@@ -9722,7 +9761,7 @@ _showwippopup() {
         this._newBestShown = true;
         let _0x435587 = this._level.endXPos || 6000;
         let _0x169d53 = this._playerWorldX;
-        this._lastPercent = Math.min(99, Math.max(0, Math.floor(_0x169d53 / _0x435587 * 100)));
+        this._lastPercent = Math.min(99, Math.floor(this._getCurrentPercent()));
         if (this._lastPercent > this._bestPercent && !this._practicedMode.practiceMode) {
           this._bestPercent = this._lastPercent;
           localStorage.setItem("bestPercent_" + (window.currentlevel[2] || "level_1"), this._bestPercent);
@@ -9959,7 +9998,9 @@ _showwippopup() {
         if (this._isDual && !this._state2.isDead && this._dualSpawnPhysicsFrame !== this._physicsFrame) {
           const leaveSecondaryPhysics = this._level.gameplayState?.enterSecondaryPhysics();
           try {
-          this._copyDualInputFlags(_dualInputState, this._state2);
+          // Each PlayerObject owns its input flags. Actual button edges
+          // reach both in _pushButton; an Options trigger re-enabling P1
+          // must not manufacture a press on P2 on the following tick.
           if (this._shouldSuppressDualGravityAction(this._state2, _primaryGravitySynced)) {
             this._state2.upKeyPressed = false;
             this._state2.queuedHold = false;
@@ -9971,11 +10012,6 @@ _showwippopup() {
           this._player2.ringJumpOnPress();
           this._player2.updateJump(verticalDelta);
           this._player2.applyObjectForces(verticalDelta);
-          if (!this._isTwoPlayerMode()) {
-            if (!this._state2.upKeyPressed) this._state.upKeyPressed = false;
-            if (!this._state2.queuedHold) this._state.queuedHold = false;
-            if (this._state2._orbActivationConsumedForPress) this._state._orbActivationConsumedForPress = true;
-          }
           this._state2.y = gdAdvancePosition(this._state2.y, this._state2.isDashing ? this._state2.dashSlope * horizontalDelta
             : this._state2.yVelocity * (this._state2.isWave ? subStepDelta : verticalDelta), this._localPhysicsActive ? 0 : 180);
           if (this._dualSpawnPhysicsFrame !== this._physicsFrame)
@@ -10568,6 +10604,9 @@ _showwippopup() {
     return false;
   }
   _shouldSkipDualSpiderInputGravitySync(fromState, options = {}) {
+    // spiderTestJumpInternal changes this PlayerObject's gravity directly;
+    // spider pads/rings do not call GJBaseGameLayer's linked dual flip.
+    if (fromState?._spiderLocalGravityFrame === this._physicsFrame) return true;
     if (!fromState?.isSpider) return false;
     if (options.forceGravitySync) return false;
     return !!options.skipSpiderInputGravity;
@@ -10713,7 +10752,20 @@ _showwippopup() {
     return mirrorCenterX + this._getMirrorVisualScale() * (xOffset - mirrorCenterX);
   }
   _enableDualMode(portal = null) {
-    if (this._isDual) return;
+    if (this._isDual) {
+      // toggleDualMode still records a newly touched dual portal and calls
+      // updateDualGround when both players already exist (31a6de). The new
+      // corridor must be available before a nearby teleport is used.
+      if (portal) {
+        this._dualBandY = this._lastBandY = portal.portalY ?? portal.y;
+        const flight = state => state.isFlying || state.isUfo || state.isWave || state.isSwing;
+        const span = flight(this._state) || flight(this._state2) ? 600 : 540;
+        const bounds = this._level._computeFlyBounds(this._dualBandY, span, false);
+        if (bounds.floorY !== this._level._flyFloorY || bounds.ceilingY !== this._level._flyCeilingY)
+          this._level.setFlyMode(true, this._dualBandY, span, false);
+      }
+      return;
+    }
     this._isDual = true;
     this._dualBandY = portal ? (portal.portalY ?? portal.y) : this._state.y;
     this._lastBandY = this._dualBandY;
@@ -10761,8 +10813,12 @@ _showwippopup() {
       // the exit into P1. Asymmetric duals may have independent positions
       // and modes, so merely hiding P2 strands P1 on the other route.
       const state={...this._state2},mode=this._getDualModeId(this._state2);
+      // The surviving body's state comes from P2; P1's physical button map
+      // stays attached to P1 (enablePlayerControls later reads that map).
+      const physicalJumpHeld = this._state._physicalJumpHeld;
       this._setPlayerGamemode(this._player,this._state,mode,true);
       Object.assign(this._state,state);
+      this._state._physicalJumpHeld = physicalJumpHeld;
       this._playerWorldX=this._secondaryWorldX ?? this._playerWorldX;
       this._player.restoreSlopeState(this._player2.captureSlopeState());
       this._player._rotation=this._player2._rotation;

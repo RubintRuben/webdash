@@ -13,7 +13,7 @@ PRODUCTION = os.environ.get('RENDER') == 'true' or '--production' in sys.argv
 ORIGINS = set(os.environ.get('WEBDASH_ORIGINS', 'https://web-dashers.github.io').split(','))
 SLOTS = BoundedSemaphore(6)
 MAX_FILE = 48 * 1024 * 1024
-GD_API_BASE = os.environ.get('WEBDASH_GD_API_BASE', 'https://www.boomlings.com/database').rstrip('/')
+GD_API_BASE = os.environ.get('WEBDASH_GD_API_BASE', 'https://webdash-gd-read-relay.peakednote2.chatgpt.site').rstrip('/')
 gd_origin = urllib.parse.urlsplit(GD_API_BASE)
 if gd_origin.scheme != 'https' or not gd_origin.hostname or gd_origin.username or gd_origin.password or gd_origin.query or gd_origin.fragment:
     raise ValueError('WEBDASH_GD_API_BASE must be an HTTPS URL for an authorized compatible API')

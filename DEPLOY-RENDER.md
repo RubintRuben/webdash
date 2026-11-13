@@ -2,7 +2,7 @@
 
 [Éles játékoldal](https://webdash-play-ajtg.onrender.com/)
 
-**Online elérés (2026-11-12):** a GD szervere Cloudflare 1005 hibával tiltja a Render hálózatát. A kliens ezért előbb a közvetlen böngészős kapcsolatot és a már beállított GD-proxyt próbálja, a Render API tartalék útvonal. A böngészős proxyn ellenőrzött a pályakeresés és a teljes pályaletöltés. A külön dalazonosítós zeneletöltés Render-backend mellett is működik. Egy útvonal hibája csak az összes elérhető útvonal sikertelensége után jelenik meg a felületen.
+**Online elérés (2026-11-13):** a kliens elsőként a saját, nyilvános [GD-közvetítőt](https://webdash-gd-read-relay.peakednote2.chatgpt.site/) használja. A korábbi négy megosztott proxy napi kerete kimerült (HTTP 429), a Render közvetlen GD-kéréseit pedig Cloudflare 1005 tiltás érinti. A közvetítő csak nyilvános pályakeresést, pályaletöltést és dalinformációt továbbít; fiókműveletet és feltöltést nem fogad. A hibás útvonalakat a kliens átmenetileg kihagyja, minden további útvonal saját időkeretet kap. A letöltési állapot alul, a nyíl mellett jelenik meg; felül csak a végleges hiba.
 
 A konfiguráció két szolgáltatást hoz létre:
 
@@ -17,7 +17,7 @@ A játék a látogatók böngészőjében fut. A szerver a GD-adatokat és a han
 2. Nyisd meg a [Render Dashboardot](https://dashboard.render.com/), majd **New → Blueprint**. Kapcsold hozzá a GitHub-fiókodat, és válaszd ki ezt a repositoryt.
 3. Ellenőrizd, hogy a `webdash-api` csomagja **Free**, majd indítsd el a Blueprintet. A `webdash-play` Static Site eleve ingyenes. A barátaidnak a **webdash-play** létrejött `onrender.com` címét küldd el.
 
-Engedélyezett, GD-formátummal kompatibilis API esetén a backend `WEBDASH_GD_API_BASE` környezeti változója annak HTTPS-alapcímére állítható, majd a szolgáltatás újraindítható. Alapértéke `https://www.boomlings.com/database`. Csak jogosult adatforrást állíts be.
+Engedélyezett, GD-formátummal kompatibilis API esetén a backend `WEBDASH_GD_API_BASE` környezeti változója annak HTTPS-alapcímére állítható, majd a szolgáltatás újraindítható. Alapértéke `https://webdash-gd-read-relay.peakednote2.chatgpt.site`. A frontend saját közvetítőjét a build `WEBDASH_GD_RELAY_BASE` változója állítja; csak HTTPS-alapcímet fogad. Forrása és tesztje a `tools/gd-relay` mappában van. Csak jogosult adatforrást állíts be.
 
 A Blueprint automatikusan átadja az API címét a frontendnek. A Static Site build parancsa `python tools/build-web.py`, a publikált mappa `dist`. A backend indítóparancsa `python tools/webdash-server.py --production`, health check útvonala `/gd-health`. Nincs telepítendő Python-csomag.
 
